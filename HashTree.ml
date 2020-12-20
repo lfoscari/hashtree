@@ -1,0 +1,100 @@
+module HashTree = struct
+    (* Utilities *)
+    let nth (a, b, c) pos = List.nth a pos, List.nth b pos, List.nth c pos
+    let count a = List.fold_left ( fun acc v -> if v = a then acc + 1 else acc ) 0
+    let max_index ls = List.fold_left ( fun ( ( i, max ), cur ) v ->
+            if v > max then ( ( cur, v ), cur + 1 ) else ( ( i, max ), cur + 1 )
+        ) ( ( 0, List.nth ls 0 ), 0 ) ls (* -> ( max value position, max value ), list length *)
+
+    type 'a tree =
+        | Leaf of 'a list * int (* * int -> old feature index, duplicate! *)
+        | Node of 'a tree array * int * ( 'a -> int ) * ( int -> int )
+
+    class ['a] hashTree
+        ( initial_bucket_size: int )
+        ( feature_maps: ( 'a -> int ) list )
+        ( hash_maps: ( int -> int ) list )
+        ( table_sizes: int list )
+    = object (self)
+
+        val mutable root: 'a tree = Leaf ( [], initial_bucket_size )
+        method root = root
+
+        method featured_gini bucket feat =
+            let featured = List.map feat bucket in
+            let len = List.length bucket |> float_of_int in (* = max_bucket_size *)
+            let unique = List.sort_uniq compare featured in
+            let len_unique = List.length unique |> float_of_int in
+            if len_unique = 1. then 0. else
+                ( 1. -. ( List.fold_left ( fun sum unq -> sum +. ( ( count unq featured |> float_of_int ) /. len ) ** 2. ) 0. unique ) ) *.
+                    ( len_unique /. ( len_unique -. 1. ) )
+
+        method private pick_feature bucket =
+            let ( max_i, _ ), _ = List.map ( self#featured_gini bucket ) feature_maps |> max_index in
+            max_i, nth ( feature_maps, hash_maps, table_sizes ) max_i
+
+        method private create_node bucket size =
+            let feature_index, ( feature_map, hash_map, table_size ) = self#pick_feature bucket in
+            Node ( Array.make table_size ( Leaf ( [], size ) ), feature_index, feature_map, hash_map )
+
+        method insert el =
+            let rec aux dest el =
+                match dest with
+                | Leaf ( bucket, max ) when List.length bucket < max -> Leaf ( el :: bucket, max )
+                | Leaf ( bucket, max ) -> List.fold_left aux ( self#create_node bucket ( max + 1 ) ) ( el :: bucket )
+                | Node ( children, index, feat, hash ) ->
+                    let dest_i = feat el |> hash in
+                    let _ = aux ( Array.get children dest_i ) el |> Array.set children dest_i in
+                    Node ( children, index, feat, hash )
+            in root <- aux root el
+
+        method visit = self#search ( -1 ) 0
+
+        method search ?( node = root ) feat_index partial_el =
+            match node with
+            | Leaf ( bucket, _ ) -> bucket
+            | Node ( children, index, _, hash ) when index = feat_index ->
+                self#search ~node:( hash partial_el |> Array.get children ) feat_index partial_el
+            | Node ( children, _, _, _ ) ->
+                Array.fold_left ( fun res node -> ( self#search ~node:node feat_index partial_el ) @ res ) [] children
+
+        method depth ( node: 'a tree ) =
+            match node with
+            | Leaf ( _, _ ) -> 1
+            | Node ( children, _, _, _ ) -> 1 + Array.fold_left ( fun max child ->
+                let d = self#depth child in
+                if d > max then d else max
+            ) 0 children
+    end
+end
+
+open HashTree
+open Printf
+
+(* Test *)
+
+exception Invalid_input
+
+let rec compare_lists a b =
+    match a, b with
+    | xa :: xsa, xb :: xsb when xa = xb -> compare_lists xsa xsb
+    | xa :: _, xb :: _ when xa > xb -> 1
+    | xa :: _, xb :: _ when xa < xb -> -1
+    | [], [] -> 0
+    | _ -> raise Invalid_input
+
+type data = int list
+let feature_amount = 3
+let test_size = 10000
+
+let test_data = List.init test_size ( fun _ -> List.init feature_amount ( fun _ -> Random.int 100 ) )
+let initial_bucket_size = Random.int 20 + 3
+let feature_maps: ( data -> int ) list = List.init feature_amount ( fun i -> ( fun x -> List.nth x i ) )
+let table_sizes = List.init feature_amount ( fun _ -> 2 + Random.int 10 )
+let hash_maps: ( int -> int ) list = List.map ( fun size -> ( fun x -> Hashtbl.hash x mod size ) ) table_sizes
+
+let root = new hashTree initial_bucket_size feature_maps hash_maps table_sizes
+let _ = List.iter ( fun value -> root#insert value ) test_data
+
+let no_loss = List.sort compare_lists root#visit = List.sort compare_lists test_data
+let depth = root#depth root#root
