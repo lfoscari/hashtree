@@ -1,0 +1,69 @@
+\documentclass[a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage[boxruled,linesnumbered]{algorithm2e}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{10pt}
+
+\title{Hierarchical hash tree}
+\author{Luigi Foscari}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+Si vuole creare un dizionario che permette le operazioni di inserimento, cancellazione e ricerca. I valori da inserire nella struttura appartengono ad un insieme $\mathcal{X}$ per cui esistono $k$ feature map $f_i: \mathcal{X} \mapsto \mathcal{H} \quad i=1,\ldots,k$ ed esistono $t$ funzioni di hash $h_{i,b}: \mathcal{H} \mapsto \{ 0,\ldots,b-1 \} \quad i=1,\ldots,t$.
+
+La struttura è organizzata come un albero, in cui ad ogni nodo corrisponde una lista di collisione o una tabella di dimensione $b$, una delle mappe di feature e una funzione di hash, nelle celle della tabella sono presenti puntatori a nodi figli. La struttura è inizializzata con un singolo nodo composto da solo un bucket.
+
+La procedura di inserimento per un elemento $x \in \mathcal{X}$ in un noto $y$ avviene nel seguente modo
+\begin{itemize}
+	\item Se $y$ è una lista di collisione $x$ è aggiunto in testa.
+	\item Se $y$ è una tabella con feature map $f$ e funzione di hash $h$, si ripete l'inserimento ricorsivamente nel nodo puntato dalla posizione $h(f(x))$ della tabella.
+\end{itemize}
+
+Se un bucket in un nodo $t$ raggiunge un limite massimo\footnote{Bisogna fare ulteriori considerazioni su questo valore} viene \textbf{scisso}, l'operazione di scissione controlla tutti gli elementi nel bucket e trova la funzione di hash che distribuisce più equamente i valori; scelta una funzione $h_{b}$ e una feature map $f$, viene poi creata una tabella di taglia $b$ e i valori del bucket sono inseriti in questa tabella.
+
+L'intera struttura dati può fare a meno delle feature map se si utilizzano funzioni di hash che hanno come dominio $\mathcal{U}$, ma questa opzione è meno interessante perché l'estrazione di feature permette di operare in modo più espressivo sui dati. Esempio pratico: l'universo contiene informazioni su libri, una feature che si è scelto di estrarre è la data di pubblicazione, si possono quindi cercare tutti i testi usciti nel medesimo anno in tempo efficiente.
+
+Senza scendere nei dettagli la struttura dati dell'albero è espressa ricorsivamente in questo modo
+\begin{verbatim}
+type 'a tree =
+| Leaf of 'a list
+| Node of 'a tree array
+\end{verbatim}
+Dato un bucket di elementi bisogna trovare la funzione di hash tra quelle a disposizione che ottiene i valori più sparsi, è possibile utilizzare l'indice di Gini normalizzato, indichiamo con $x$ i valori nel campione e con $\phi$ le frequenze relative:
+$$ \{ x_1, \ldots, x_n \} \rightarrow \{ \phi_1, \ldots, \phi_k \} \qquad I = \left( 1 - \sum_{i=0}^{k}\phi_i \right) \frac{k}{k - 1} $$
+Un algoritmo ingenuo che utilizza questo indice è il seguente, assumiamo per semplicità che ad ogni mappa di feature sia associata una e una sola funzione di hash
+
+\begin{algorithm}[H]
+	\DontPrintSemicolon
+
+	\KwIn{$B$ bucket, $f_1, \ldots, f_k$ feature maps, $h_1, \ldots, h_k$ funzioni di hash}
+	\KwOut{Una feature map}
+
+	Sia $M$ una matrice $k \times |B|$ \;
+	\For{$i=0, \ldots, k-1$} {
+		\For{$j=0, \ldots, |B| - 1$} {
+			$M[i][j] \gets h_i(f_i(B_j))$ \;
+		}
+	}
+
+	Sia $G$ un array di taglia $k$ \;
+	\For{$i=0, \ldots, k-1$} {
+		$G[i] \gets$ indice di Gini normalizzato della $i$-esima riga di $M$ \;
+	}
+	$r \gets$ indice dell'elemento più grande di $G$ \;
+
+	\Return{$f_r$}
+
+	\caption{Algoritmo per la scelta della funzione di hash}
+\end{algorithm}
+Sarebbe anche possibile definire le feature map in modo che abbiamo ognuna un codominio distinto, ma questo renderebbe necessario definire almeno una funzione di hash per ognuna di essere, rendendo più complicato il procedimento di scelta delle feature.
+
+Si può rendere l'algoritmo più efficiente? Anche nel caso in cui si rimuova il rilassamento.
+
+\end{document}

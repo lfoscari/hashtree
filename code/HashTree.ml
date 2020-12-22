@@ -7,7 +7,7 @@ module HashTree = struct
         ) ( ( 0, List.nth ls 0 ), 0 ) ls (* -> ( max value position, max value ), list length *)
 
     type 'a tree =
-        | Leaf of 'a list * int (* * int -> old feature index, duplicate! *)
+        | Leaf of 'a list * int
         | Node of 'a tree array * int * ( 'a -> int ) * ( int -> int )
 
     class ['a] hashTree
@@ -65,6 +65,12 @@ module HashTree = struct
                 let d = self#depth child in
                 if d > max then d else max
             ) 0 children
+
+        method usage ( node: 'a tree ) =
+            match node with
+            | Leaf ( bucket, max ) -> ( List.length bucket |> float_of_int ) /. ( float_of_int max )
+            | Node ( children, _, _, _ ) ->
+                ( Array.fold_left ( fun mean child -> mean +. self#usage child ) 0. children ) /. ( Array.length children |> float_of_int )
     end
 end
 
@@ -85,16 +91,7 @@ let rec compare_lists a b =
 
 type data = int list
 let feature_amount = 3
-let test_size = 10000
+let test_size = 1000
 
+(* Fisso il caso di test *)
 let test_data = List.init test_size ( fun _ -> List.init feature_amount ( fun _ -> Random.int 100 ) )
-let initial_bucket_size = Random.int 20 + 3
-let feature_maps: ( data -> int ) list = List.init feature_amount ( fun i -> ( fun x -> List.nth x i ) )
-let table_sizes = List.init feature_amount ( fun _ -> 2 + Random.int 10 )
-let hash_maps: ( int -> int ) list = List.map ( fun size -> ( fun x -> Hashtbl.hash x mod size ) ) table_sizes
-
-let root = new hashTree initial_bucket_size feature_maps hash_maps table_sizes
-let _ = List.iter ( fun value -> root#insert value ) test_data
-
-let no_loss = List.sort compare_lists root#visit = List.sort compare_lists test_data
-let depth = root#depth root#root
