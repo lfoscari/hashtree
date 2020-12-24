@@ -1,6 +1,6 @@
 module HashTree = struct
     (* Utilities *)
-    let nth (a, b, c) pos = List.nth a pos, List.nth b pos, List.nth c pos
+    let random_from ls = List.length ls |> Random.int |> List.nth ls
     let count a = List.fold_left ( fun acc v -> if v = a then acc + 1 else acc ) 0
     let max_index ls = List.fold_left ( fun ( ( i, max ), cur ) v ->
             if v > max then ( ( cur, v ), cur + 1 ) else ( ( i, max ), cur + 1 )
@@ -13,8 +13,8 @@ module HashTree = struct
     class ['a] hashTree
         ( initial_bucket_size: int )
         ( feature_maps: ( 'a -> int ) list )
-        ( hash_maps: ( int -> int ) list )
-        ( table_sizes: int list )
+        ( hash_family: ( int -> int ) list )
+        ( table_size: int )
     = object (self)
 
         val mutable root: 'a tree = Leaf ( [], initial_bucket_size )
@@ -29,12 +29,13 @@ module HashTree = struct
                 ( 1. -. ( List.fold_left ( fun sum unq -> sum +. ( ( count unq featured |> float_of_int ) /. len ) ** 2. ) 0. unique ) ) *.
                     ( len_unique /. ( len_unique -. 1. ) )
 
+        (* Ottimizzazione: utilizzo già i valori di f(x) calcolati per trovare la feature migliore *)
         method private pick_feature bucket =
             let ( max_i, _ ), _ = List.map ( self#featured_gini bucket ) feature_maps |> max_index in
-            max_i, nth ( feature_maps, hash_maps, table_sizes ) max_i
+            max_i, ( List.nth feature_maps max_i ), ( random_from hash_family )
 
         method private create_node bucket size =
-            let feature_index, ( feature_map, hash_map, table_size ) = self#pick_feature bucket in
+            let feature_index, feature_map, hash_map = self#pick_feature bucket in
             Node ( Array.make table_size ( Leaf ( [], size ) ), feature_index, feature_map, hash_map )
 
         method insert el =
@@ -75,19 +76,8 @@ module HashTree = struct
 end
 
 open HashTree
-open Printf
 
 (* Test *)
-
-exception Invalid_input
-
-let rec compare_lists a b =
-    match a, b with
-    | xa :: xsa, xb :: xsb when xa = xb -> compare_lists xsa xsb
-    | xa :: _, xb :: _ when xa > xb -> 1
-    | xa :: _, xb :: _ when xa < xb -> -1
-    | [], [] -> 0
-    | _ -> raise Invalid_input
 
 type data = int list
 let feature_amount = 3

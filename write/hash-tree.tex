@@ -32,7 +32,7 @@ La procedura di inserimento per un elemento $x \in \mathcal{X}$ in un nodo $y$ a
 	\item Se $y$ è una tabella con feature map $f$ e funzione di hash $h$, si ripete l'inserimento ricorsivamente nel nodo puntato dalla posizione $h(f(x))$ della tabella.
 \end{itemize}
 
-Se un bucket in un nodo $t$ raggiunge un limite massimo $m$ viene \textbf{scisso}, l'operazione di scissione controlla tutti gli elementi nel bucket e trova la chiave che descrive meglio l'insieme; scelta una feature map $f$ viene creata una tabella di taglia $b$ e ogni elemento $x$ nel bucket è inserito nella tabella in posizione $h(f(x))$.
+Se un bucket in un nodo $t$ raggiunge un limite massimo $m$ viene \textbf{scisso}, l'operazione di scissione controlla tutti gli elementi nel bucket e trova la chiave che descrive meglio l'insieme; scelta una feature map $f$ viene estratta una funzione di hash dalla famiglia $H$ e creata una tabella di taglia $b$, ogni elemento $x$ nel bucket è inserito nella tabella in posizione $h(f(x))$.
 
 In fase di inizializzazione viene deciso un valore $m$, per ogni nodo figlio $m$ è incrementato di 1. Questo per evitare il caso in cui ci siano scissioni infinite.
 
@@ -56,7 +56,7 @@ Nel caso in cui sono presenti tutte le chiavi il tempo di ricerca è pari al tem
 \subsection*{Scissione}
 Dato un bucket di elementi bisogna trovare la chiave tra quelle a disposizione che ottiene i valori più sparsi in una tabella, è possibile utilizzare l'indice di Gini normalizzato\footnote{Un altro indice di dispersione è l'eterogeneità, ma a causa dei logaritmi è più difficile da calcolare, ulteriori considerazioni vanno fatte} $I$, indichiamo con $x$ i valori nel campione (in questo caso il risultato di $f(x)$ per ogni $x$ nel bucket) e con $\phi$ le frequenze relative:
 $$ \{ x_1, \ldots, x_m \} \rightarrow \{ \phi_1, \ldots, \phi_t \} \qquad I = \left( 1 - \sum_{i=1}^{t}\phi_i \right) \frac{t}{t - 1} $$
-Un algoritmo ingenuo che utilizza questo indice è il seguente, assumiamo per semplicità che ad ogni mappa di feature sia associata una e una sola funzione di hash
+Un algoritmo ingenuo che utilizza questo indice è il seguente
 
 \begin{algorithm}[H]
 	\DontPrintSemicolon

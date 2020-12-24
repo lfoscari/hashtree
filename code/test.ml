@@ -1,4 +1,5 @@
 open HashTree
+open Printf
 
 (* TODO: fare test estensivi su initial_bucket_size e table_sizes
  * differenti per trovare la configurazione ottimale e scrivere
@@ -7,12 +8,23 @@ open HashTree
  * (che sono inalterabili perchè dipeso da utilità e dall'universo)
  *)
 
-let initial_bucket_size = 100 (* Random.int 20 + 3 *)
-let feature_maps: ( data -> int ) list = List.init feature_amount ( fun i -> ( fun x -> List.nth x i ) )
-let table_sizes = [15; 15; 15]  (* List.map ( fun _ -> 2 + Random.int 10 ) feature_maps *)
-let hash_maps: ( int -> int ) list = List.map ( fun size -> ( fun x -> Hashtbl.hash x mod size ) ) table_sizes
+let rec compare_lists a b =
+    match a, b with
+    | xa :: xsa, xb :: xsb when xa = xb -> compare_lists xsa xsb
+    | xa :: _, xb :: _ when xa > xb -> 1
+    | xa :: _, xb :: _ when xa < xb -> -1
+    | [], [] -> 0
+    | _ -> raise Invalid_input
 
-let root = new hashTree initial_bucket_size feature_maps hash_maps table_sizes
+let initial_bucket_size = 100 (* Random.int 20 + 3 *)
+let feature_maps = List.init feature_amount ( fun i -> ( fun x -> List.nth x i ) )
+let table_size = 15
+
+let hash_family_size = 10 (* Non è così importante per ora *)
+let hash_maps = List.init hash_family_size ( fun _ -> ( fun x -> Hashtbl.seeded_hash ( Random.int 100 ) x mod table_size ) )
+(* Facciamo finta che sia una famiglia universale *)
+
+let root = new hashTree initial_bucket_size feature_maps hash_maps table_size
 let _ = List.iter ( fun value -> root#insert value ) test_data
 
 let no_loss = List.sort compare_lists root#visit = List.sort compare_lists test_data
