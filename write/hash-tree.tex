@@ -15,9 +15,7 @@
 
 \maketitle
 
-Questo documento è una bozza della struttura dati.
-
-Si vuole creare una struttura che permette le operazioni di inserimento, cancellazione e ricerca su una o più chiavi\footnote{Intese come valori che caratterizzano i dati, non per forza uniche, sono ammessi i duplicati}. I valori da inserire nella struttura appartengono ad un insieme $\mathcal{X}$ per cui esistono
+Si vuole creare una struttura che permette le operazioni di inserimento, cancellazione e ricerca su una o più chiavi\footnote{Intese come valori che caratterizzano i dati, non per forza uniche, sono ammessi i duplicati. Esiste un nome migliore?}. I valori da inserire nella struttura appartengono ad un insieme $\mathcal{X}$ per cui esistono
 \begin{itemize}
 	\item $k$ feature map $f_i: \mathcal{X} \mapsto \mathcal{H} \quad i=1,\ldots,k$ che estraggono le chiavi dai dati.
 	\item Un intero $b$.
@@ -28,13 +26,13 @@ La struttura è organizzata come un albero, ad ogni nodo corrisponde una lista d
 
 La procedura di inserimento per un elemento $x \in \mathcal{X}$ in un nodo $y$ avviene nel seguente modo
 \begin{itemize}
-	\item Se $y$ è una lista di collisione $x$ è aggiunto in testa.
+	\item Se $y$ è una lista di collisione, $x$ è aggiunto in testa.
 	\item Se $y$ è una tabella con feature map $f$ e funzione di hash $h$, si ripete l'inserimento ricorsivamente nel nodo puntato dalla posizione $h(f(x))$ della tabella.
 \end{itemize}
 
-Se un bucket in un nodo $t$ raggiunge un limite massimo $m$ viene \textbf{scisso}, l'operazione di scissione controlla tutti gli elementi nel bucket e trova la chiave che descrive meglio l'insieme; scelta una feature map $f$ viene estratta una funzione di hash dalla famiglia $H$ e creata una tabella di taglia $b$, ogni elemento $x$ nel bucket è inserito nella tabella in posizione $h(f(x))$.
+Quando un bucket in un nodo $t$ raggiunge un limite massimo $m$ viene \textbf{scisso}, l'operazione di scissione controlla tutti gli elementi nel bucket e trova la chiave che descrive meglio l'insieme; scelta una feature map $f$ viene estratta una funzione di hash dalla famiglia $H$ e creata una tabella di taglia $b$, ogni elemento $x$ nel bucket è inserito nella tabella in posizione $h(f(x))$.
 
-In fase di inizializzazione viene deciso un valore $m$, per ogni nodo figlio $m$ è incrementato di 1. Questo per evitare il caso in cui ci siano scissioni infinite.
+In fase di inizializzazione viene deciso un valore $m$, per ogni nodo figlio $m$ è incrementato di 1. Questo per evitare il caso in cui ci siano scissioni infinite. (È davvero necessario?)
 
 L'intera struttura dati può fare a meno delle feature map se si utilizzano funzioni di hash che hanno come dominio $\mathcal{X}$, ma questa opzione è meno interessante perché l'estrazione di feature permette di operare in modo più espressivo sui dati. Esempio pratico: l'universo contiene informazioni su libri, una feature che si è scelto di estrarre è la data di pubblicazione, si possono quindi cercare tutti i testi usciti nel medesimo anno in tempo efficiente.
 
@@ -54,7 +52,7 @@ Nel caso in cui sia presente almeno una chiave è possibile, nei nodi che la com
 Nel caso in cui sono presenti tutte le chiavi il tempo di ricerca è pari al tempo di inserimento, più la ricerca lineare nella lista di collisione, che però avrà taglia limitata.
 
 \subsection*{Scissione}
-Dato un bucket di elementi bisogna trovare la chiave tra quelle a disposizione che ottiene i valori più sparsi in una tabella, è possibile utilizzare l'indice di Gini normalizzato\footnote{Un altro indice di dispersione è l'eterogeneità, ma a causa dei logaritmi è più difficile da calcolare, ulteriori considerazioni vanno fatte} $I$, indichiamo con $x$ i valori nel campione (in questo caso il risultato di $f(x)$ per ogni $x$ nel bucket) e con $\phi$ le frequenze relative:
+Dato un bucket di elementi bisogna trovare la chiave tra quelle a disposizione che ottiene i valori più sparsi in una tabella, è possibile utilizzare l'indice di Gini normalizzato\footnote{Un altro indice di dispersione è l'eterogeneità, ma a causa dei logaritmi è più difficile da calcolare, ulteriori considerazioni vanno fatte} $I$, indichiamo con $x$ i valori nel campione (in questo caso il risultato dell'applicazione di $f$ su ogni elemento del bucket) e con $\phi$ le frequenze relative:
 $$ \{ x_1, \ldots, x_m \} \rightarrow \{ \phi_1, \ldots, \phi_t \} \qquad I = \left( 1 - \sum_{i=1}^{t}\phi_i \right) \frac{t}{t - 1} $$
 Un algoritmo ingenuo che utilizza questo indice è il seguente
 

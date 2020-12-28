@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.7.29)  24 DEC 2020 11:08
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.7.29)  28 DEC 2020 10:42
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -167,24 +167,19 @@ File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 LaTeX Font Info:    Trying to load font information for U+msb on input line 16.
  (/usr/local/texlive/2020basic/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-)
-Overfull \hbox (9.88885pt too wide) in paragraph at lines 35--36
-[]\OT1/cmr/m/n/10 Se un bucket in un nodo $\OML/cmm/m/it/10 t$ \OT1/cmr/m/n/10 rag-giunge un lim-ite mas-simo $\OML/cmm/m/it/10 m$ \OT1/cmr/m/n/10 viene \OT1/cmr/bx/n/10 scisso\OT1/cmr/m/n/10 , l'operazione
- []
-
-[1
+) [1
 
 {/usr/local/texlive/2020basic/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] [3] (./hash-tree.aux) ) 
 Here is how much of TeX's memory you used:
- 2551 strings out of 482056
- 35879 string characters out of 5937675
+ 2552 strings out of 482056
+ 35887 string characters out of 5937675
  277492 words of memory out of 5000000
- 18242 multiletter control sequences out of 15000+600000
+ 18243 multiletter control sequences out of 15000+600000
  540792 words of font info for 57 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 30i,13n,31p,514b,320s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 30i,13n,31p,533b,320s stack positions out of 5000i,500n,10000p,200000b,80000s
  </Users/luigifoscari/Library/texlive/2020basic/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1000.600pk></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb></usr/local/texlive/2020basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on hash-tree.pdf (3 pages, 163102 bytes).
+Output written on hash-tree.pdf (3 pages, 163813 bytes).
 PDF statistics:
  79 PDF objects out of 1000 (max. 8388607)
  57 compressed objects within 1 object stream
