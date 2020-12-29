@@ -8,6 +8,8 @@ open Printf
  * (che sono inalterabili perchè dipeso da utilità e dall'universo)
  *)
 
+exception Invalid_input
+
 let rec compare_lists a b =
     match a, b with
     | xa :: xsa, xb :: xsb when xa = xb -> compare_lists xsa xsb
@@ -16,17 +18,28 @@ let rec compare_lists a b =
     | [], [] -> 0
     | _ -> raise Invalid_input
 
-let initial_bucket_size = 100 (* Random.int 20 + 3 *)
+let initial_bucket_size = 10 (* Random.int 20 + 3 *)
 let feature_maps = List.init feature_amount ( fun i -> ( fun x -> List.nth x i ) )
 let table_size = 15
 
 let hash_family_size = 10 (* Non è così importante per ora *)
-let hash_maps = List.init hash_family_size ( fun _ -> ( fun x -> Hashtbl.seeded_hash ( Random.int 100 ) x mod table_size ) )
+let hash_maps = List.init hash_family_size ( fun _ -> let n = Random.int 100 in ( fun x -> Hashtbl.seeded_hash n x mod table_size ) )
 (* Facciamo finta che sia una famiglia universale *)
 
 let root = new hashTree initial_bucket_size feature_maps hash_maps table_size
-let _ = List.iter ( fun value -> root#insert value ) test_data
+let insert = List.iter root#insert test_data
 
 let no_loss = List.sort compare_lists root#visit = List.sort compare_lists test_data
 let depth = root#depth root#root
 let usage = root#usage root#root
+
+let feature_index = Random.int feature_amount
+let feature = List.nth feature_maps feature_index
+let value = Random.int 100
+let value_exists_in_search =
+    root#search feature_index value
+    |> List.exists ( fun el -> feature el = value )
+    (* |> List.sort compare_lists = List.sort compare_lists test_data *)
+let value_exists_in_dataset =
+    root#visit
+    |> List.exists ( fun el -> feature el = value )

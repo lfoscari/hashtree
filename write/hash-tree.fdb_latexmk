@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1609148561 "hash-tree.tex" "hash-tree.pdf" "hash-tree" 1609148561
+["pdflatex"] 1609275960 "hash-tree.tex" "hash-tree.pdf" "hash-tree" 1609275961
   "/Users/luigifoscari/Library/texlive/2020basic/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1000.600pk" 1601984296 11524 371bad9c1e90bd9923fd7489981b5589 ""
   "/usr/local/texlive/2020basic/texmf-dist/fonts/tfm/jknappen/ec/tcrm1000.tfm" 1136768653 1536 e07581a4bb3136ece9eeb4c3ffab8233 ""
   "/usr/local/texlive/2020basic/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
@@ -63,9 +63,9 @@
   "/usr/local/texlive/2020basic/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1586277717 79187 81ead2df248685203b3a6d80ff4485fa ""
   "/usr/local/texlive/2020basic/texmf-var/web2c/pdftex/pdflatex.fmt" 1596012876 1835989 9e719a29130b7553db1897c4e8226233 ""
   "/usr/local/texlive/2020basic/texmf.cnf" 1586277716 628 4346f9a816ba8e5dc36d93d5100b369e ""
-  "hash-tree.aux" 1609148561 45 9108cb1e5d0715b696fc51716bdec3e1 "pdflatex"
-  "hash-tree.tex" 1609148559 6013 26c3ddc730396550a16c5a5a256e2c7d ""
+  "hash-tree.aux" 1609275961 45 9108cb1e5d0715b696fc51716bdec3e1 "pdflatex"
+  "hash-tree.tex" 1609275960 7396 1c10e46b1c5a4c176fea4913e8ba8f30 ""
   (generated)
   "hash-tree.log"
-  "hash-tree.pdf"
   "hash-tree.aux"
+  "hash-tree.pdf"

@@ -20,8 +20,9 @@ module HashTree = struct
         val mutable root: 'a tree = Leaf ( [], initial_bucket_size )
         method root = root
 
-        method featured_gini bucket feat =
-            let featured = List.map feat bucket in
+        (* Da ripulire *)
+        method featured_gini bucket hash_map feature_map =
+            let featured = List.map ( fun v -> feature_map v |> hash_map ) bucket in
             let len = List.length bucket |> float_of_int in (* = max_bucket_size *)
             let unique = List.sort_uniq compare featured in
             let len_unique = List.length unique |> float_of_int in
@@ -30,12 +31,13 @@ module HashTree = struct
                     ( len_unique /. ( len_unique -. 1. ) )
 
         (* Ottimizzazione: utilizzo già i valori di f(x) calcolati per trovare la feature migliore *)
-        method private pick_feature bucket =
-            let ( max_i, _ ), _ = List.map ( self#featured_gini bucket ) feature_maps |> max_index in
-            max_i, ( List.nth feature_maps max_i ), ( random_from hash_family )
+        method private pick_feature bucket hash_map =
+            let ( max_i, _ ), _ = List.map ( self#featured_gini bucket hash_map ) feature_maps |> max_index in
+            max_i, List.nth feature_maps max_i
 
         method private create_node bucket size =
-            let feature_index, feature_map, hash_map = self#pick_feature bucket in
+            let hash_map = random_from hash_family in
+            let feature_index, feature_map = self#pick_feature bucket hash_map in
             Node ( Array.make table_size ( Leaf ( [], size ) ), feature_index, feature_map, hash_map )
 
         method insert el =
@@ -81,7 +83,6 @@ open HashTree
 
 type data = int list
 let feature_amount = 3
-let test_size = 1000
+let test_size = 100
 
-(* Fisso il caso di test *)
 let test_data = List.init test_size ( fun _ -> List.init feature_amount ( fun _ -> Random.int 100 ) )

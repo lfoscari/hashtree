@@ -22,19 +22,19 @@ Si vuole creare una struttura che permette le operazioni di inserimento, cancell
 	\item Una famiglia di hash universale $H$ tale che $\forall h \in H$, $h: \mathcal{H} \mapsto \{ 0, \ldots, b - 1 \}$.
 \end{itemize}
 
-La struttura è organizzata come un albero, ad ogni nodo corrisponde una lista di collisione, chiamata anche \textit{bucket}, oppure una tripla composta da una tabella di dimensione $b$, una chiave e una funzione di hash. Nelle celle della tabella sono presenti puntatori a nodi figli. La struttura è inizializzata con un singolo nodo composto da solo un bucket.
+La struttura è organizzata come un albero, le foglie sono liste di collisione, chiamate anche \textit{bucket}, i nodi sono una una tripla composta da una tabella di dimensione $b$, una chiave e una funzione di hash. Nelle celle della tabella sono presenti puntatori ai figli. La struttura è inizializzata con una singola foglia.
 
-La procedura di inserimento per un elemento $x \in \mathcal{X}$ in un nodo $y$ avviene nel seguente modo
+La procedura di inserimento per un elemento $x \in \mathcal{X}$ in un nodo $y$, inizialmente la radice, avviene nel seguente modo
 \begin{itemize}
-	\item Se $y$ è una lista di collisione, $x$ è aggiunto in testa.
-	\item Se $y$ è una tabella con feature map $f$ e funzione di hash $h$, si ripete l'inserimento ricorsivamente nel nodo puntato dalla posizione $h(f(x))$ della tabella.
+	\item Se $y$ è una foglia, $x$ è aggiunto in testa alla lista.
+	\item Se $y$ è un nodo interno con feature map $f$ e funzione di hash $h$, si ripete l'inserimento ricorsivamente nell'elemento puntato dalla posizione $h(f(x))$ della tabella.
 \end{itemize}
 
-Quando un bucket in un nodo $t$ raggiunge un limite massimo $m$ viene \textbf{scisso}, l'operazione di scissione controlla tutti gli elementi nel bucket e trova la chiave che descrive meglio l'insieme; scelta una feature map $f$ viene estratta una funzione di hash dalla famiglia $H$ e creata una tabella di taglia $b$, ogni elemento $x$ nel bucket è inserito nella tabella in posizione $h(f(x))$.
+Quando una foglia raggiunge un limite massimo $m$ viene \textbf{scissa}, l'operazione di scissione controlla tutti gli elementi nel bucket e trova la combinazione di funzione di hash e feature map che descrive meglio l'insieme; viene poi creata una tabella di foglie di taglia $b$ e ogni elemento $x$ del bucket è inserito nella foglia puntata dalla posizione $h(f(x))$ della tabella.
 
-In fase di inizializzazione viene deciso un valore $m$, per ogni nodo figlio $m$ è incrementato di 1. Questo per evitare il caso in cui ci siano scissioni infinite. (È davvero necessario?)
+% In fase di inizializzazione viene deciso un valore $m$, per ogni nodo figlio $m$ è incrementato di 1. Questo per evitare il caso in cui ci siano scissioni infinite. (È davvero necessario?)
 
-L'intera struttura dati può fare a meno delle feature map se si utilizzano funzioni di hash che hanno come dominio $\mathcal{X}$, ma questa opzione è meno interessante perché l'estrazione di feature permette di operare in modo più espressivo sui dati. Esempio pratico: l'universo contiene informazioni su libri, una feature che si è scelto di estrarre è la data di pubblicazione, si possono quindi cercare tutti i testi usciti nel medesimo anno in tempo efficiente.
+\textit{L'intera struttura dati può fare a meno delle feature map se si utilizzano funzioni di hash che hanno come dominio $\mathcal{X}$, ma questa opzione è meno interessante perché l'estrazione di feature permette di operare in modo più espressivo sui dati. Esempio pratico: l'universo contiene informazioni su libri, una feature che si è scelto di estrarre è la data di pubblicazione, si possono quindi cercare tutti i testi usciti nel medesimo anno in tempo efficiente.}
 
 Senza scendere nei dettagli la struttura dati dell'albero è espressa ricorsivamente in questo modo (notazione ML)
 \begin{verbatim}
@@ -52,7 +52,7 @@ Nel caso in cui sia presente almeno una chiave è possibile, nei nodi che la com
 Nel caso in cui sono presenti tutte le chiavi il tempo di ricerca è pari al tempo di inserimento, più la ricerca lineare nella lista di collisione, che però avrà taglia limitata.
 
 \subsection*{Scissione}
-Dato un bucket di elementi bisogna trovare la chiave tra quelle a disposizione che ottiene i valori più sparsi in una tabella, è possibile utilizzare l'indice di Gini normalizzato\footnote{Un altro indice di dispersione è l'eterogeneità, ma a causa dei logaritmi è più difficile da calcolare, ulteriori considerazioni vanno fatte} $I$, indichiamo con $x$ i valori nel campione (in questo caso il risultato dell'applicazione di $f$ su ogni elemento del bucket) e con $\phi$ le frequenze relative:
+Dato un bucket di elementi bisogna trovare la combinazione di funzione di hash e feature map tra quelle a disposizione che ottiene i valori più sparsi in una tabella, è possibile utilizzare l'indice di Gini normalizzato\footnote{Un altro indice di dispersione è l'eterogeneità, ma a causa dei logaritmi è più difficile da calcolare, ulteriori considerazioni vanno fatte} $I$, indichiamo con $x$ i valori nel campione (in questo caso il risultato dell'applicazione di $f$ su ogni elemento del bucket) e con $\phi$ le frequenze relative:
 $$ \{ x_1, \ldots, x_m \} \rightarrow \{ \phi_1, \ldots, \phi_t \} \qquad I = \left( 1 - \sum_{i=1}^{t}\phi_i \right) \frac{t}{t - 1} $$
 Un algoritmo ingenuo che utilizza questo indice è il seguente
 
@@ -61,19 +61,23 @@ Un algoritmo ingenuo che utilizza questo indice è il seguente
 
 	\;
 
-	\KwIn{$B$ bucket, $f_1, \ldots, f_k$ feature map}
+	\KwIn{$B$ bucket, $f_1, \ldots, f_k$ feature map, $H$ famiglia universale di hash}
 	\KwOut{Una feature map}
 
 	Sia $M$ una matrice $k \times |B|$ \;
+	Estrai una funzione $h$ di hash a caso da $H$ \;
 	\For{$i=0, \ldots, k-1$} {
 		\For{$j=0, \ldots, |B| - 1$} {
-			$M[i][j] \gets f_i(B_j)$ \;
+			$M[i][j] \gets h(f_i(B_j))$ \;
 		}
 	}
 
 	Sia $G$ un array di taglia $k$ \;
 	\For{$i=0, \ldots, k-1$} {
 		$G[i] \gets$ indice di Gini normalizzato della $i$-esima riga di $M$ \;
+	}
+	\If{$G$ non presenta i valori giusti} {
+		Ripeti l'algoritmo dall'inizio \;
 	}
 	$r \gets$ indice dell'elemento più grande di $G$ \;
 
@@ -82,6 +86,7 @@ Un algoritmo ingenuo che utilizza questo indice è il seguente
 	\;
 
 \end{algorithm}
+La scelta tiene conto anche della funzione di hash perché se valutassi solo la feature map ci sarebbe il rischio che la funzioni di hash (anche se poco probabile) incanali l'input sempre nella stessa foglia.
 
 \subsection*{Prestazioni}
 
@@ -96,5 +101,28 @@ Il tempo di inserimento o cancellazione di un elemento $x \in \mathcal{X}$ è \t
 \textit{Una metrica spesso utilizzata per valutare queste strutture dati è il numero di accessi necessari per effettuare una ricerca, nel caso in cui ci siano tutte le chiavi il numero di accessi è pari alla profondità dell'albero. Essendo le tabelle contenitori di soli puntatori, si potrebbero inserire una accanto all'altra nello stesso blocco o in pochi blocchi e lasciare le liste di collisione in un altro blocco.}
 
 Bisogna capire come si evolve la profondità dell'albero in base al numero di elementi inseriti $n$ e i parametri $m$ e $b$.
+
+\subsection*{Prossimi passi}
+\begin{itemize}
+	\item Fare una ricerca in letterature di strutture dati simili e fare dei paragoni. Ad esempio
+		\begin{itemize}
+			\item B-albero
+			\item Tabella di hash
+			\item ?
+		\end{itemize}
+	\item Analizzare le metriche utilizzate da queste strutture. Ad esempio (considerati in media)
+		\begin{enumerate}
+			\item Numero di accessi per una ricerca con tutte le chiavi.
+			\item Numero di accessi per un inserimento.
+			\item Dimensione delle liste di collisione.
+			\item ?
+		\end{enumerate}
+	\item Definire un dataset e valutare nel seguente modo
+		\begin{enumerate}
+			\item Definire un sottoinsieme delle permutazioni del dataset\footnote{Per un dataset abbastanza grande il numero di permutazioni sarebbe enorme}.
+			\item Per ogni elemento di questo sottoinsieme inserirlo per intero in un HH-tree e valutare le metriche.
+			\item Ripete l'intero procedimento per diversi valori di $m$ e $b$.
+		\end{enumerate}
+\end{itemize}
 
 \end{document}
