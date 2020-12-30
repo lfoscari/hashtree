@@ -32,6 +32,8 @@ La procedura di inserimento per un elemento $x \in \mathcal{X}$ in un nodo $y$, 
 
 Quando una foglia raggiunge un limite massimo $m$ viene \textbf{scissa}, l'operazione di scissione controlla tutti gli elementi nel bucket e trova la combinazione di funzione di hash e feature map che descrive meglio l'insieme; viene poi creata una tabella di foglie di taglia $b$ e ogni elemento $x$ del bucket è inserito nella foglia puntata dalla posizione $h(f(x))$ della tabella.
 
+L'hashing universale si può implementare perfettamente, perché si conosce la dimensione dell'insieme di cui fare hashing.
+
 % In fase di inizializzazione viene deciso un valore $m$, per ogni nodo figlio $m$ è incrementato di 1. Questo per evitare il caso in cui ci siano scissioni infinite. (È davvero necessario?)
 
 \textit{L'intera struttura dati può fare a meno delle feature map se si utilizzano funzioni di hash che hanno come dominio $\mathcal{X}$, ma questa opzione è meno interessante perché l'estrazione di feature permette di operare in modo più espressivo sui dati. Esempio pratico: l'universo contiene informazioni su libri, una feature che si è scelto di estrarre è la data di pubblicazione, si possono quindi cercare tutti i testi usciti nel medesimo anno in tempo efficiente.}
