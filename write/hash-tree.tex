@@ -32,7 +32,7 @@ La procedura di inserimento per un elemento $x \in \mathcal{X}$ in un nodo $y$, 
 
 Quando una foglia raggiunge un limite massimo $m$ viene \textbf{scissa}, l'operazione di scissione controlla tutti gli elementi nel bucket e trova la combinazione di funzione di hash e feature map che descrive meglio l'insieme; viene poi creata una tabella di foglie di taglia $b$ e ogni elemento $x$ del bucket è inserito nella foglia puntata dalla posizione $h(f(x))$ della tabella.
 
-L'hashing universale si può implementare perfettamente, perché si conosce la dimensione dell'insieme di cui fare hashing.
+Se $m = b$ allora in fase di scissione è possibile inserire ogni elemento in una foglia differente. Ciò non fornisce tuttavia garanzie sugli inserimenti successivi e implica costruire una funzione di hash ad hoc ad ogni scissione, che è un'operazione più costosa di prelevare una funzione dalla famiglia.
 
 % In fase di inizializzazione viene deciso un valore $m$, per ogni nodo figlio $m$ è incrementato di 1. Questo per evitare il caso in cui ci siano scissioni infinite. (È davvero necessario?)
 
@@ -78,7 +78,7 @@ Un algoritmo ingenuo che utilizza questo indice è il seguente
 	\For{$i=0, \ldots, k-1$} {
 		$G[i] \gets$ indice di Gini normalizzato della $i$-esima riga di $M$ \;
 	}
-	\If{$G$ non presenta i valori giusti} {
+	\If{$G$ non è valido} {
 		Ripeti l'algoritmo dall'inizio \;
 	}
 	$r \gets$ indice dell'elemento più grande di $G$ \;
@@ -88,7 +88,10 @@ Un algoritmo ingenuo che utilizza questo indice è il seguente
 	\;
 
 \end{algorithm}
-La scelta tiene conto anche della funzione di hash perché se valutassi solo la feature map ci sarebbe il rischio che la funzioni di hash (anche se poco probabile) incanali l'input sempre nella stessa foglia.
+La scelta tiene conto anche della funzione di hash perché se valutassi solo la feature map ci sarebbe il rischio che la funzioni di hash (anche se poco probabile) incanali l'input sempre nella stessa foglia. La funzione di hash è scartata se $G$ non soddisfa una serie di requisiti, ad esempio
+\begin{itemize}
+	\item Deve esiste almeno un valore diverso da 0.
+\end{itemize}
 
 \subsection*{Prestazioni}
 
