@@ -22,9 +22,8 @@ let initial_bucket_size = 10 (* Random.int 20 + 3 *)
 let feature_maps = List.init feature_amount ( fun i -> ( fun x -> List.nth x i ) )
 let table_size = 15
 
-let hash_family_size = 10 (* Non è così importante per ora *)
+let hash_family_size = 10
 let hash_maps = List.init hash_family_size ( fun _ -> let n = Random.int 100 in ( fun x -> Hashtbl.seeded_hash n x mod table_size ) )
-(* Facciamo finta che sia una famiglia universale *)
 
 let root = new hashTree initial_bucket_size feature_maps hash_maps table_size
 let insert = List.iter root#insert test_data
