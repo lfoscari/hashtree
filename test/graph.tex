@@ -1,0 +1,113 @@
+\documentclass[a4paper]{article}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+
+% \usepackage[utf8]{inputenc}
+% \usepackage{amsmath, amssymb}
+% \usepackage[boxed]{algorithm2e}
+
+% \setlength{\parindent}{0pt}
+% \setlength{\parskip}{10pt}
+
+\begin{document}
+
+	I parametri in uso sono
+	\begin{itemize}
+		\item $n$ il numero di elementi inseriti.
+		\item $m$ la dimensione massima delle foglie.
+		\item $b$ la taglia delle tabelle di hash nei nodi.
+	\end{itemize}
+	Le metriche analizzate sono
+	\begin{itemize}
+		\item \textit{Usage} o utilizzo è la percentuale di riempimento delle foglie rispetto ad $m$.
+		\item \textit{Depth} è la profondità dell'albero.
+	\end{itemize}
+	E sono analizzate dopo l'inserimento di $n$ elementi. È possibile fare le seguenti considerazioni su $m$ e $b$
+	\begin{itemize}
+		\item Riguardo a $b$ possiamo dire che
+		\begin{itemize}
+			\item Se $b = 1$ l'utilizzo è sempre al 100\%, perchè c'è una scissione ad ogni inserimento dopo l'$m$-esimo, mentre la profondità è $n - m + 1$.
+			\item Se $b = n$ l'utilizzo ha un valore atteso pari a $n/m$ e la profondità $1$, ipotizzando che l'hashing utilizzato sia universale. 
+		\end{itemize}
+		\item Riguardo ad $m$ possiamo dire che
+		\begin{itemize}
+			\item Al crescere di $m$ da 1 ad $n$ la profondità e l'utilizzo tendono a scendere. 
+			\item Dal momento in cui $m = n$ non avvengono scissioni, perciò la profondità sarà sempre 1 e l'utilizzo al 100\%.
+		\end{itemize}
+	\end{itemize}
+
+	\pagebreak
+
+	\section*{\texttt{MAGIC Gamma Telescope Dataset}}
+
+	È stato utilizzato un subset di $n = 50$ righe del \texttt{MAGIC Gamma Telescope Dataset}. Per valori di $m$ e $b$ tra 1 e $n$ sono stati calcolati utilizzo e profondità medi su 10 permutazioni. Questi sono i risultati.
+
+	\begin{center}
+		\begin{tikzpicture}
+			\begin{axis}[
+					xlabel={$m$}, xmin=1, xmax=50,
+					ylabel={$b$}, ymin=1, ymax=50,
+					zlabel={Usage}, zmin=0.0, zmax=1.0, zmajorgrids=true,
+					width=\textwidth * 0.9
+				]
+				\addplot3 [scatter, only marks, mark=+]
+					table [x=m, y=b, z=avg_usage, col sep=comma] {../resources/magic/magic04.out};
+			\end{axis}
+
+			\begin{axis}[
+					xlabel={$m$}, xmin=1, xmax=50,
+					ylabel={$b$}, ymin=1, ymax=50,
+					zlabel={Depth}, zmin=1, zmax=50, zmajorgrids=true,
+					width=\textwidth * 0.9, yshift=9cm
+				]
+				\addplot3 [scatter, only marks, mark=+]
+					table [x=m, y=b, z=avg_depth, col sep=comma] {../resources/magic/magic04.out};
+			\end{axis}
+		\end{tikzpicture}
+
+		\begin{tikzpicture}
+			\begin{axis}[
+				xlabel={$m$}, xmin=1, xmax=50,
+				ylabel={$b$}, ymin=1, ymax=50,
+				zlabel={Number of accesses}, zmin=0.0, zmajorgrids=true,
+				width=\textwidth * 0.9, yshift=18cm
+			]
+			\addplot3 [scatter, only marks, mark=+]
+				table [x=m, y=b, z=avg_access, col sep=comma] {../resources/magic/magic04.out};
+			\end{axis}
+		\end{tikzpicture}
+	\end{center}
+
+	\pagebreak
+
+	\section*{\texttt{Cloud DataSet}}
+
+	È stato utilizzato un subset di $n = 50$ righe del \texttt{Cloud DataSet}. Per valori di $m$ e $b$ tra 1 e $n$ sono stati calcolati utilizzo e profondità medi su 10 permutazioni. Questi sono i risultati.
+
+	\begin{center}
+		\begin{tikzpicture}
+			\begin{axis}[
+					xlabel={$m$}, xmin=1, xmax=50,
+					ylabel={$b$}, ymin=1, ymax=50,
+					zlabel={Usage}, zmin=0.0, zmax=1.0, zmajorgrids=true,
+					width=\textwidth * 0.9
+				]
+				\addplot3 [scatter, only marks, mark=+]
+					table [x=m, y=b, z=avg_usage, col sep=comma] {../resources/cloud/cloud.out};
+			\end{axis}
+
+			\begin{axis}[
+					xlabel={$m$}, xmin=1, xmax=50,
+					ylabel={$b$}, ymin=1, ymax=50,
+					zlabel={Depth}, zmin=1, zmax=50, zmajorgrids=true,
+					width=\textwidth * 0.9, yshift=9cm
+				]
+				\addplot3 [scatter, only marks, mark=+]
+					table [x=m, y=b, z=avg_depth, col sep=comma] {../resources/cloud/cloud.out};
+			\end{axis}
+		\end{tikzpicture}
+	\end{center}
+
+
+\end{document}

@@ -1,6 +1,15 @@
 .DS_Store
 *.swp
-.ipynb_checkpoints
+
+## Dune
+
+_opam
+_build
+/_boot
+_perf
+*.install
+.merlin
+*.corrected
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
