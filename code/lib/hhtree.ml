@@ -1,12 +1,23 @@
+(**************************************************
+ Utilities *)
+
 let random_from ls = List.length ls |> Random.int |> List.nth ls
 let count a = List.fold_left ( fun acc v -> if v = a then acc + 1 else acc ) 0
 let max_index ls = List.fold_left ( fun ( ( i, max ), cur ) v ->
         if compare v max = 1 then ( ( cur, v ), cur + 1 ) else ( ( i, max ), cur + 1 )
     ) ( ( 0, List.nth ls 0 ), 0 ) ls (* -> ( max value position, max value ), list length *)
 
+
+(**************************************************
+ Type *)
+
 type ( 'a, 'b ) tree =
     | Leaf of 'a list * int
     | Node of ( 'a, 'b ) tree array * int * ( 'a -> 'b ) * ( 'b -> int )
+
+
+(**************************************************
+ HH-tree adaptive *)
 
 class ['a, 'b] hashTree
     ( initial_bucket_size: int )
@@ -79,7 +90,7 @@ class ['a, 'b] hashTree
 
     method depth ( node: ( 'a, 'b ) tree ) =
         match node with
-        | Leaf ( _, _ ) -> 1
+        | Leaf _ -> 1
         | Node ( children, _, _, _ ) -> 1 + Array.fold_left ( fun max child ->
             let d = self#depth child in
             if d > max then d else max
@@ -90,4 +101,5 @@ class ['a, 'b] hashTree
         | Leaf ( bucket, max ) -> ( List.length bucket |> float_of_int ) /. ( float_of_int max )
         | Node ( children, _, _, _ ) ->
             ( Array.fold_left ( fun mean child -> mean +. self#usage child ) 0. children ) /. ( Array.length children |> float_of_int )
+
 end

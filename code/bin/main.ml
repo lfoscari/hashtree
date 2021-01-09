@@ -4,62 +4,6 @@ open Hhtree
 (* Print stack trace *)
 let _ = Printexc.record_backtrace true
 
-(*
- * TODO:
- * Modularizzare il codice.
- * Scegliere un altro dataset e fare due test.
- *)
-
-(* The test are organized like follows.
- * The dataset is fixed (MAGIC Gamma Telescope Dataset), from
- * such the first 'testset_rows_amount' or 'n' rows are selected and 
- * 'permutations_amount' of the total number of permutations
- * of those lines are generated.
- * 
- * A single test is parametric over two values m and b. Fixed
- * these for each permutation a tree in created, the values are
- * inserted and the metric are evaluated.
- * 
- * The values of m and b we want to test are
- *      m: 1 .. infinity
- *      b: 1 .. infinity
- * The following consideration are related to the
- * implementation in which m is constant in each node.
- * Obviously these need to be reduced, like follows
- *      When m = 1 then each bucket is long at most 1,
- *      ergo the usage is 100% and the depth is at most n.
- *      When m = n the usage is 100% and the depth is 1.
- *      As m increases the usage drops, but the depth is
- *      the same. It's same to assume that an m greater 
- *      than n is uselesss.
- * 
- *      When b = 1 the depth is at most n, the usage is
- *      ( 1 - ( n % m ) / m ) * 100. when b >= n
- *      and the hashing is universal the expected value
- *      of the depth is 1, the usage is 1 / m. Like b, m
- *      is not to be tested beyond n.
- *
- *  for i = 1 ... permutations_amount
- *      for j = 1 ... len(test_parameters)
- *          Create tree with parameters j-th test_parameters
- *          Insert i-th testset into tree
- *      Save metrics evaluations
- *)
-
-(* If m is increased in each node, so that a leaf at depth d
- * has is long at most d + m, then the following happens
- *      When b = 1 the usage is 100%, because there's a
- *      split at every insertion past the m-th, and a split
- *      occurs when the usage is is a leaf; the depth is n - m + 1.
- *      When b = n there is not much to say, the expected
- *      value of depth is 1 (universal hashing) and of usage
- *      is n / m.
- *
- *      m is a mistery to me at the moment.
- *)
-
- (* Is the best option for both m and b, log2(n)? *)
-
 
 (**************************************************
  Utilities *)
@@ -135,8 +79,8 @@ let random_search ( tree: ( 'a, 'b ) hashTree ) csv =
     let element = List.length csv |> Random.int |> List.nth csv in
 
     feature_map element |> tree#counting_search feature_index |> float_of_int
-
     
+
 (**************************************************
  Run tests *)
 
