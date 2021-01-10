@@ -105,21 +105,21 @@ let run_test source_file destination_file map =
         let avg_depth = List.fold_left (+.) 0. depth_ls /. len |> round 4 in
         let avg_usage = List.fold_left (+.) 0. usage_ls /. len |> round 4 in
 
-        let var_depth = List.fold_left ( fun var x -> var +. ( x -. avg_depth ) ** 2. ) 0. depth_ls /. len |> round 4 in
-        let var_usage = List.fold_left ( fun var x -> var +. ( x -. avg_usage ) ** 2. ) 0. usage_ls /. len |> round 4 in
+        let std_depth = List.fold_left ( fun var x -> var +. ( x -. avg_depth ) ** 2. ) 0. depth_ls /. len |> sqrt |> round 4 in
+        let std_usage = List.fold_left ( fun var x -> var +. ( x -. avg_usage ) ** 2. ) 0. usage_ls /. len |> sqrt |> round 4 in
 
         let avg_access = List.fold_left (+.) 0. access_count /. len |> round 4 in
 
         [
             string_of_int m; string_of_int b;
             string_of_float avg_depth; string_of_float avg_usage;
-            string_of_float var_depth; string_of_float var_usage;
+            string_of_float std_depth; string_of_float std_usage;
             string_of_float avg_access
         ]
 
     ) test_parameters in
 
-    [ "m"; "b"; "avg_depth"; "avg_usage"; "var_depth"; "var_usage"; "avg_access" ] :: test_results
+    [ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage"; "avg_access" ] :: test_results
     |> Csv.save destination_file
 
 

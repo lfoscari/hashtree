@@ -5,9 +5,9 @@
 
 \usepackage[margin=1in]{geometry}
 
-% \usepackage[utf8]{inputenc}
+\usepackage[utf8]{inputenc}
 \usepackage{amsmath, amssymb}
-% \usepackage[boxed]{algorithm2e}
+\usepackage[boxed]{algorithm2e}
 
 % \setlength{\parindent}{0pt}
 % \setlength{\parskip}{10pt}
@@ -38,19 +38,6 @@ Le metriche analizzate sono
 Le seguenti analisi hanno mostrano come gli unici valori \textit{sensati} per $m$ e $b$ sono quelli minori di $n$ e che conviene allontanarsi da valori troppo bassi per entrambi.
 
 È necessario distinguere due implementazioni, nella prima, chiamata \textit{rigida}, il parametro $m$ rimane inalterato in tutta la struttura, nella seconda, chiamata \textit{adattiva}, $m$ è incrementato di 1 per ogni figlio, quindi una foglia a prodondità $t$ avrà una lunghezza massima $m + t$.
-
-% When m = 1 then each bucket is long at most 1,
-% ergo the usage is 100% and the depth is at most n.
-% When m = n the usage is 100% and the depth is 1.
-% As m increases the usage drops, but the depth is
-% the same. It's same to assume that an m greater 
-% than n is uselesss.
-%
-% When b = 1 the depth is at most n, the usage is
-% ( 1 - ( n % m ) / m ) * 100. when b >= n
-% and the hashing is universal the expected value
-% of the depth is 1, the usage is 1 / m. Like b, m
-% is not to be tested beyond n.
 
 % La soluzione migliore per b e m è log2(n)?
 
@@ -112,11 +99,11 @@ L'implementazione in question presenta una condizione sui parametri, nel caso in
 		\begin{axis}[
 				xlabel={$m$}, xmin=1, xmax=50,
 				ylabel={$b$}, ymin=1, ymax=50,
-				zlabel={Usage}, zmajorgrids=true,
+				zlabel={Usage}, zmin=0.0, zmajorgrids=true,
 				width=\textwidth * 0.5
 			]
 			\addplot3 [scatter, only marks, mark=+]
-				table [x=m, y=b, z=var_usage, col sep=comma] {../resources/magic/magic04.out};
+				table [x=m, y=b, z=std_usage, col sep=comma] {../resources/magic/magic04.out};
 		\end{axis}
 	\end{tikzpicture}
 
@@ -135,11 +122,11 @@ L'implementazione in question presenta una condizione sui parametri, nel caso in
 		\begin{axis}[
 				xlabel={$m$}, xmin=1, xmax=50,
 				ylabel={$b$}, ymin=1, ymax=50,
-				zlabel={Depth}, zmajorgrids=true,
+				zlabel={Depth}, zmin=0.0, zmajorgrids=true,
 				width=\textwidth * 0.5
 			]
 			\addplot3 [scatter, only marks, mark=+]
-				table [x=m, y=b, z=var_depth, col sep=comma] {../resources/magic/magic04.out};
+				table [x=m, y=b, z=std_depth, col sep=comma] {../resources/magic/magic04.out};
 		\end{axis}
 	\end{tikzpicture}
 
@@ -182,7 +169,7 @@ L'implementazione in question presenta una condizione sui parametri, nel caso in
 				width=\textwidth * 0.5
 			]
 			\addplot3 [scatter, only marks, mark=+]
-				table [x=m, y=b, z=var_usage, col sep=comma] {../resources/cloud/cloud.out};
+				table [x=m, y=b, z=std_usage, col sep=comma] {../resources/cloud/cloud.out};
 		\end{axis}
 	\end{tikzpicture}
 
@@ -205,7 +192,7 @@ L'implementazione in question presenta una condizione sui parametri, nel caso in
 				width=\textwidth * 0.5
 			]
 			\addplot3 [scatter, only marks, mark=+]
-				table [x=m, y=b, z=var_depth, col sep=comma] {../resources/cloud/cloud.out};
+				table [x=m, y=b, z=std_depth, col sep=comma] {../resources/cloud/cloud.out};
 		\end{axis}
 	\end{tikzpicture}
 
@@ -221,5 +208,37 @@ L'implementazione in question presenta una condizione sui parametri, nel caso in
 		\end{axis}
 	\end{tikzpicture}
 \end{center}
+
+\pagebreak
+
+\section{Strutture dati analoghe}
+
+Un HH-tree con $k$ mappe di feature su un universo $\mathcal{X}$ permette di fare ricerca su più campi, espressi come feature degli elementi di $\mathcal{X}$. È possibile ottenere una struttura dati quasi analoga tramite l'utilizzo di molteplici tabelle di hash: gli elementi inseriti $S \subseteq \mathcal{X}$ sono conservati in un array $A$, sono create inoltre $k$ tabelle di hash di taglia $b$, ad ognuna è associata una mappa.
+\begin{itemize}
+	\item L'inserimento di un valore $x \in \mathcal{X}$ è effettuato aggiungendo all'array $x$ e per ognuna delle tabelle di hash calcolare la posizione di $x$ e inserire nella lista di collisione la posizione di $x$ all'interno dell'array.
+	\item La ricerca su un insieme di chiavi è definita nel seguente algoritmo
+	\begin{algorithm}
+		\DontPrintSemicolon
+
+		\;
+
+		\KwData{$A$ insieme degli elementi, $C$ chiavi, $T$ tabelle}
+		\KwOut{Risultato della ricerca su $c$ chiavi}
+
+		Sia $R$ una copia di $A$ \;
+		\For{$i = 1, \dots, |T|$} {
+			\For{$j = 1, \dots, |C|$} {
+				Rimuovi da $R$ ogni elemento che non compare in $T[i][j]$ \;
+			}
+		}
+
+		\Return $R$ \;
+
+		\;
+	\end{algorithm}
+	\item La cancellazione di effettua rimuovendo l'indice dell'elemento da ogni tabella di hash e l'elemento da $A$.
+\end{itemize}
+
+Quindi l'inserimento è lineare su $k$, mentre la ricerca con un insieme di chiavi $C$ è $O(|T||C| + n) = O(|T|k + n)$\footnote{$|C| \leq k$}. Lo spazio occupato è invece $O(n + |T|n)$. Inoltre l'inserimento occupa spazio $O(n)$.
 
 \end{document}
