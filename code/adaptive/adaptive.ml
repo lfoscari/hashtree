@@ -1,5 +1,4 @@
 open Lib
-open Hhtree
 
 (* Print stack trace *)
 let _ = Printexc.record_backtrace true
@@ -61,7 +60,7 @@ let build_tree bucket_size table_size feature_amount test_set =
     (* Sommo la lista prima di fare hashing perchè Hashtbl quando fa hashing considera solo i primi 10 elementi *)
     let hash_maps = List.init hash_family_size ( fun _ -> let n = Random.int 100 in ( fun x -> ( Hashtbl.seeded_hash n x ) mod table_size ) ) in
 
-    let tree = new hashTree bucket_size feature_maps hash_maps table_size in
+    let tree = new HHtreeAdaptive.hashTree bucket_size feature_maps hash_maps table_size in
     let _ = List.iter tree#insert test_set in
 
     tree
@@ -70,7 +69,7 @@ let build_tree bucket_size table_size feature_amount test_set =
 (**************************************************
  Random search *)
 
-let random_search ( tree: ( 'a, 'b ) hashTree ) csv =
+let random_search ( tree: ( 'a, 'b ) HHtreeAdaptive.hashTree ) csv =
 
     let feature_index = List.nth csv 0 |> List.length |> Random.int in
 
@@ -122,7 +121,7 @@ let run_permutations_test source_file destination_file map =
     [ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage"; "avg_access" ] :: test_results
     |> Csv.save destination_file
 
-let run_log_test source_file _ map =
+(* let run_log_test source_file _ map =
 
     let testset_gen, features_amount = load_csv source_file map in
 
@@ -132,7 +131,7 @@ let run_log_test source_file _ map =
     let _ = [ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage"; "avg_access" ] |> List.iter print_endline in
     let _ = test_mb m b testset_gen features_amount |> List.iter print_endline in
 
-    ()
+    () *)
 
 
 (**************************************************
@@ -143,18 +142,18 @@ let () =
     let _ = print_endline "Running tests..." in
 
     let _ = run_permutations_test
-        "../data/magic/magic04.data"
-        "../data/magic/magic04.out"
+        "../data/source/magic04.data"
+        "../data/adaptive/magic04.out"
         ( fun x -> x ) in
 
     let _ = run_permutations_test
-        "../data/cloud/cloud.data"
-        "../data/cloud/cloud.out"
+        "../data/source/cloud.data"
+        "../data/adaptive/cloud.out"
         ( fun x -> List.map float_of_string x ) in
 
-    let _ = run_log_test
-        "../data/cloud/cloud.data"
-        "../data/cloud/cloud.out"
-        ( fun x -> List.map float_of_string x ) in
+    (* let _ = run_log_test
+        "../data/source/cloud.data"
+        "../data/adaptive/cloud.out"
+        ( fun x -> List.map float_of_string x ) in *)
 
     ()

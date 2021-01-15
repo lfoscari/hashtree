@@ -1,0 +1,3 @@
+(executable
+  (name adaptive)
+  (libraries lib csv batteries))
