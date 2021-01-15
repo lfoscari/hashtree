@@ -54,7 +54,7 @@ class ['a, 'b] hashTree
     method insert el =
         let rec aux dest el =
             match dest with
-            | Leaf ( bucket, max ) when List.length bucket < max -> Leaf ( el :: bucket, max )
+            | Leaf ( bucket, max ) when List.length bucket <= max -> Leaf ( el :: bucket, max )
             | Leaf ( bucket, max ) -> List.fold_left aux ( self#create_node bucket ( max + 1 ) ) ( el :: bucket )
             | Node ( children, index, feat, hash ) ->
                 let dest_i = feat el |> hash in
@@ -67,6 +67,7 @@ class ['a, 'b] hashTree
         | Leaf ( bucket, _ ) -> bucket
         | Node ( children, _, _, _ ) -> Array.fold_left ( fun res child -> ( self#visit child ) @ res ) [] children
 
+    (* TODO: ricerca su più feature_index e feature_value *)
     method search ?( node = root ) feature_index feature_value =
         match node with
         | Leaf ( bucket, _ ) -> bucket
