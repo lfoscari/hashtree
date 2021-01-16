@@ -5,7 +5,7 @@ let _ = Printexc.record_backtrace true
 
 let feature_amount = 3
 let feature_maps = List.init feature_amount ( fun i -> ( fun x -> List.nth x i ) )
-let test_set = List.init 50 ( fun _ -> List.init feature_amount ( fun _ -> Random.int 100 ) )
+let test_set = List.init 50 ( fun _ -> List.init feature_amount ( fun _ -> Random.int 50 ) )
 
 let test_hashgorups =
 
@@ -23,9 +23,9 @@ let test_hashgorups =
     random_feature t |> hg#search random_feature_index |> List.mem t
   ) test_set in
   
-  let _ = print_endline hg#to_string in
+  let _ = print_string hg#to_string in
 
-  let _ = Printf.printf "%b\n" check in
+  let _ = Printf.printf "Check: %b\n\n" check in
 
   ()
 
@@ -44,7 +44,7 @@ let test_linear =
   
   let _ = print_string linear#to_string in
 
-  let _ = Printf.printf "%b\n\n" check in
+  let _ = Printf.printf "\nCheck: %b\n\n" check in
 
   ()
 

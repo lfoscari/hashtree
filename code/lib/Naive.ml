@@ -18,9 +18,21 @@ class ['a, 'b] hashgroup
     let pos = List.length archive - 1 in
     hash_tables <- List.map ( fun ( feature_map, hash_map, table ) ->
       let index = feature_map el |> hash_map in
-      let _ = Array.get table index |> List.cons pos |> Array.set table index in
+      let _ = table.(index) <- pos :: table.(index) in
       feature_map, hash_map, table
     ) hash_tables
+  
+  method counting_insert el =
+    let count = ref 0 in
+    let _ = archive <- archive @ [el] in
+    let _ = count := !count + 1 in
+    let pos = List.length archive - 1 in
+    let _ = hash_tables <- List.map ( fun ( feature_map, hash_map, table ) ->
+      let _ = count := !count + 2 in
+      let index = feature_map el |> hash_map in
+      let _ = table.(index) <- pos :: table.(index) in
+      feature_map, hash_map, table
+    ) hash_tables in !count
 
   method private archive_to_string = 
     let _, str = ( List.fold_left ( fun ( index, acc ) a ->
@@ -53,6 +65,7 @@ class ['a, 'b] linear
     val mutable archive = []
 
     method insert el = archive <- el :: archive
+    method counting_insert ( _: 'a ) = 1 (* O(1) is for boys, 1 is for men *)
 
     method search feature_index feature_value =
       let feature_map = List.nth feature_maps feature_index in
@@ -62,4 +75,5 @@ class ['a, 'b] linear
       List.fold_left ( fun a v ->
         a ^ "[" ^ ( List.fold_left ( fun b t -> b ^ " " ^ ( string_of_int t ) ) "" v ) ^ " ]\n"
       ) "" archive
+
 end

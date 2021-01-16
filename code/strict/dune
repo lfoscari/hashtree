@@ -1,3 +1,0 @@
-(executable
-  (name strict)
-  (libraries lib csv batteries))

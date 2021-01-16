@@ -58,9 +58,26 @@ class ['a, 'b] hashTree
             | Leaf ( bucket, max ) -> List.fold_left aux ( self#create_node bucket ( max + 1 ) ) ( el :: bucket )
             | Node ( children, index, feat, hash ) ->
                 let dest_i = feat el |> hash in
-                let _ = aux ( Array.get children dest_i ) el |> Array.set children dest_i in
+                let _ =  children.(dest_i) <- aux children.(dest_i) el in
                 Node ( children, index, feat, hash )
         in root <- aux root el
+
+    method counting_insert el =
+        let rec aux count dest el =
+            match dest with
+            | Leaf ( bucket, max ) when List.length bucket <= max ->
+                Leaf ( el :: bucket, max ), count + 1
+            | Leaf ( bucket, max ) ->
+                List.fold_left ( fun ( node, old_count ) value -> aux old_count node value )
+                    ( self#create_node bucket ( max + 1 ), count + 1 ) ( el :: bucket )
+            | Node ( children, index, feat, hash ) ->
+                let dest_i = feat el |> hash in
+                let new_node, new_count = aux ( count + 1 ) children.(dest_i) el in
+                let _ = children.(dest_i) <- new_node in
+                Node ( children, index, feat, hash ), new_count in
+        let new_root, count = aux 0 root el in
+        let _ = root <- new_root in
+        count
 
     method visit ( node: ( 'a, 'b ) tree ) =
         match node with
@@ -68,26 +85,26 @@ class ['a, 'b] hashTree
         | Node ( children, _, _, _ ) -> Array.fold_left ( fun res child -> ( self#visit child ) @ res ) [] children
 
     (* TODO: ricerca su più feature_index e feature_value *)
-    method search ?( node = root ) feature_index feature_value =
-        match node with
-        | Leaf ( bucket, _ ) -> bucket
-        | Node ( children, index, _, hash ) when index = feature_index ->
-            self#search ~node:( hash feature_value |> Array.get children ) feature_index feature_value
-        | Node ( children, _, _, _ ) ->
-            Array.fold_left ( fun res node -> ( self#search ~node:node feature_index feature_value ) @ res ) [] children
-
+    method search feature_index feature_value =
+        let rec aux = function
+            | Leaf ( bucket, _ ) -> bucket
+            | Node ( children, index, _, hash ) when index = feature_index ->
+                hash feature_value |> Array.get children |> aux
+            | Node ( children, _, _, _ ) ->
+                Array.fold_left ( fun res node -> ( aux node ) @ res ) [] children
+        in aux root
 
     (* Like search, but counts the number of accesses *)
-    method counting_search ?( node = root ) ?( count = 0 ) feature_index feature_value =
-        let new_count = count + 1 in
-        match node with
-        | Leaf _ -> new_count
-        | Node ( children, index, _, hash ) when index = feature_index ->
-            self#counting_search ~node:( hash feature_value |> Array.get children ) ~count:new_count feature_index feature_value
-        | Node ( children, _, _, _ ) ->
-            Array.fold_left ( fun old_count node ->
-                self#counting_search ~node:node ~count:old_count feature_index feature_value
-            ) new_count children
+    method counting_search feature_index feature_value =
+        let rec aux count node =
+            let new_count = count + 1 in
+            match node with
+            | Leaf _ -> new_count
+            | Node ( children, index, _, hash ) when index = feature_index ->
+                hash feature_value |> Array.get children |> aux new_count
+            | Node ( children, _, _, _ ) ->
+                Array.fold_left aux new_count children
+        in aux 0 root
 
     method depth ( node: ( 'a, 'b ) tree ) =
         match node with
