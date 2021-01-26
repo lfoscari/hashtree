@@ -27,8 +27,11 @@ class ['a, 'b] hashTree
 = object (self)
 
     val mutable root: ( 'a, 'b ) tree = Leaf ( [], initial_bucket_size )
-
     method root = root
+
+    val mutable insertion_costs = []
+    method insertion_costs = insertion_costs
+
     method feature_maps = feature_maps
 
     (* Da ripulire *)
@@ -51,7 +54,7 @@ class ['a, 'b] hashTree
         let feature_index, feature_map = self#pick_feature bucket hash_map in
         Node ( Array.make table_size ( Leaf ( [], size ) ), feature_index, feature_map, hash_map )
 
-    method insert el =
+    (* method insert el =
         let rec aux dest el =
             match dest with
             | Leaf ( bucket, max ) when List.length bucket <= max -> Leaf ( el :: bucket, max )
@@ -60,9 +63,9 @@ class ['a, 'b] hashTree
                 let dest_i = feat el |> hash in
                 let _ =  children.(dest_i) <- aux children.(dest_i) el in
                 Node ( children, index, feat, hash )
-        in root <- aux root el
+        in root <- aux root el *)
 
-    method counting_insert el =
+    method insert el =
         let rec aux count dest el =
             match dest with
             | Leaf ( bucket, max ) when List.length bucket <= max ->
@@ -75,9 +78,10 @@ class ['a, 'b] hashTree
                 let new_node, new_count = aux ( count + 1 ) children.(dest_i) el in
                 let _ = children.(dest_i) <- new_node in
                 Node ( children, index, feat, hash ), new_count in
-        let new_root, count = aux 0 root el in
+        let new_root, total_count = aux 0 root el in
         let _ = root <- new_root in
-        count
+        let _ = insertion_costs = total_count :: insertion_costs in
+        ()
 
     method visit ( node: ( 'a, 'b ) tree ) =
         match node with
