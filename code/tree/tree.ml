@@ -212,14 +212,14 @@ let () =
 		"../data/adaptive/magic04.out"
 		"../data/strict/magic04.out"
 		"../data/linear/magic04.out"
-		"../data/linear/cloud.out"
+		"../data/hashgroup/magic04.out"
 		( fun x -> x ) in
 
 	let _ = run_permutations_test
 		"../data/source/cloud.data"
 		"../data/adaptive/cloud.out"
 		"../data/strict/cloud.out"
-		"../data/hashgroup/magic04.out"
+		"../data/linear/cloud.out"
 		"../data/hashgroup/cloud.out"
 		( fun x -> List.map float_of_string x ) in
 

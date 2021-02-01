@@ -5,12 +5,11 @@ class ['a, 'b] hashgroup
 = object (_)
 
   val mutable archive = []
+  method archive = archive
 
   val mutable hash_tables = List.init ( List.length feature_maps ) ( fun i ->
     List.nth feature_maps i, List.nth hash_family i , Array.make hash_tables_size []
   )
-
-  method archive = archive
   method hash_tables = hash_tables
 
   method insert el =

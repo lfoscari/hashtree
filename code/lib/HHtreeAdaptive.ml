@@ -71,7 +71,7 @@ class ['a, 'b] hashTree
             | Leaf ( bucket, max ) when List.length bucket <= max ->
                 Leaf ( el :: bucket, max ), count + 1
             | Leaf ( bucket, max ) ->
-                List.fold_left ( fun ( node, old_count ) value -> aux old_count node value )
+                List.fold_left ( fun ( old_node, old_count ) value -> aux old_count old_node value )
                     ( self#create_node bucket ( max + 1 ), count + 1 ) ( el :: bucket )
             | Node ( children, index, feat, hash ) ->
                 let dest_i = feat el |> hash in
@@ -80,7 +80,7 @@ class ['a, 'b] hashTree
                 Node ( children, index, feat, hash ), new_count in
         let new_root, total_count = aux 0 root el in
         let _ = root <- new_root in
-        let _ = insertion_costs = total_count :: insertion_costs in
+        let _ = insertion_costs <- total_count :: insertion_costs in
         ()
 
     method visit ( node: ( 'a, 'b ) tree ) =

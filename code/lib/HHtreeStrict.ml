@@ -1,5 +1,5 @@
 (**************************************************
-Utilities *)
+ Utilities *)
 
 let random_from ls = List.length ls |> Random.int |> List.nth ls
 let count a = List.fold_left ( fun acc v -> if v = a then acc + 1 else acc ) 0
@@ -9,7 +9,7 @@ let max_index ls = List.fold_left ( fun ( ( i, max ), cur ) v ->
 
 
 (**************************************************
-Type *)
+ Type *)
 
 type ( 'a, 'b ) tree =
     | Leaf of 'a list * int
@@ -17,7 +17,7 @@ type ( 'a, 'b ) tree =
 
 
 (**************************************************
-HH-tree adaptive *)
+ HH-tree adaptive *)
 
 class ['a, 'b] hashTree
     ( initial_bucket_size: int )
@@ -94,7 +94,7 @@ class ['a, 'b] hashTree
                 Node ( children, index, feat, hash ), new_count + 1 in
         let new_root, total_count = aux 0 root el in
         let _ = root <- new_root in
-        let _ = insertion_costs = total_count :: insertion_costs in
+        let _ = insertion_costs <- total_count :: insertion_costs in
         ()
 
     method visit ( node: ( 'a, 'b ) tree ) =
