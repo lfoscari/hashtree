@@ -48,8 +48,9 @@ let random_searches_amount = 50
 (* strict only *)
 let min_gini, attempts = 0.4, 10
 
-let test_m = List.init testset_rows_amount ( fun i -> i + 1 )
-let test_b = List.init testset_rows_amount ( fun i -> i + 1 )
+(* Avoid the obvious values b = m = 1 and b = m = n *)
+let test_m = List.init ( testset_rows_amount ) ( fun i -> i + 1 )
+let test_b = List.init ( testset_rows_amount ) ( fun i -> i + 1 )
 
 (* These are the parameters agains which we'll test the trees *)
 let test_parameters = all_combinations test_m test_b
@@ -112,12 +113,11 @@ let random_search tree csv =
 (**************************************************
  Run tests *)
 
-let save_to_csv filename test_results =
+let save_to_csv header filename test_results =
 
 	let _ = print_string "Test results saved in "; print_endline filename in
 
-	[ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage"; "avg_access"; "avg_insertion" ] :: test_results
-	|> Csv.save filename
+	header :: test_results |> Csv.save filename
 
 let get_metrics trees csvs =
 
@@ -158,9 +158,12 @@ let assemble_data m b testset_gen features_amount =
 	let _ = new Linear.linear feature_maps in
 	let linear_results = 1. in (* the cost of insertion is 1 *)
 
-	let hashgroup = new Hashgroup.hashgroup feature_maps hash_maps b in
+	(* let hashgroup = new Hashgroup.hashgroup feature_maps hash_maps b in *)
 	let hashgroup_results =
-		List.map ( fun csv -> List.map hashgroup#counting_insert csv |> mean_of_ints testset_rows_amount ) csvs
+		List.map ( fun csv ->
+			let hg = new Hashgroup.hashgroup feature_maps hash_maps b in
+			let _ = List.iter hg#insert csv in
+			mean_of_ints testset_rows_amount hg#insertion_costs ) csvs
 		|> mean_of_floats permutations_amount in
 
 	( parameters @ get_metrics adaptive csvs, parameters @ get_metrics strict csvs ),
@@ -177,13 +180,13 @@ let run_permutations_test source_file dest_adaptive dest_strict dest_linear dest
 	let adaptive_test_data, strict_test_data = List.split trees_data in
 	let linear_test_data, hashgroup_test_data = List.split naive_data in
 
-	let _ = save_to_csv dest_adaptive adaptive_test_data in
+	let trees_header = [ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage"; "avg_access"; "avg_insertion" ] in
+	let naive_header = [ "avg_insertion" ] in
 
-	let _ = save_to_csv dest_strict strict_test_data in
-
-	let _ = Csv.save dest_linear ( ["avg_insertion"] :: linear_test_data ) in
-
-	let _ = Csv.save dest_hashgroup ( ["avg_insertion"] :: hashgroup_test_data ) in
+	let _ = save_to_csv trees_header dest_adaptive adaptive_test_data in
+	let _ = save_to_csv trees_header dest_strict strict_test_data in
+	let _ = save_to_csv naive_header dest_hashgroup hashgroup_test_data in
+	let _ = save_to_csv naive_header dest_linear linear_test_data in
 
 	()
 
@@ -222,6 +225,14 @@ let () =
 		"../data/linear/cloud.out"
 		"../data/hashgroup/cloud.out"
 		( fun x -> List.map float_of_string x ) in
+
+	let _ = run_permutations_test
+		"../data/source/shelterdogs.data"
+		"../data/adaptive/shelterdogs.out"
+		"../data/strict/shelterdogs.out"
+		"../data/linear/shelterdogs.out"
+		"../data/hashgroup/shelterdogs.out"
+		( fun x -> x ) in
 
 	(* let _ = run_log_test
 		"../data/source/cloud.data"
