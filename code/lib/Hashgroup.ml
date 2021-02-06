@@ -66,6 +66,15 @@ class ['a, 'b] hashgroup
 
   method insert el = insertion_costs <- ( self#inner_insert el ) :: insertion_costs
 
-  (* method search feature_index feature_value = () *)
+  method search element =
+    let count = ref 0 in (* numero di accessi *)
+    let _ = count := !count + 1 in
+    let feature_value = feature element in
+    let rec aux index =
+      match archive.(index) with
+      | [] -> false
+      | t when feature t = feature_value && t = element -> true
+      | _ -> aux ( ( index + 1 ) mod size )
+    in aux ( ( hash feature_value ) mod size )
 
 end

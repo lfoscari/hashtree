@@ -80,7 +80,8 @@ let test_dataset filename map =
 *)
 
 let feature_amount = 3
-let test = List.init 100 ( fun _ -> List.init feature_amount ( fun _ -> Random.int 100 ) )
+let test_size = 100
+let test = List.init test_size ( fun _ -> List.init feature_amount ( fun _ -> Random.int 100 ) )
 let initial_table_size = 10
 let hash_family = List.init 50 ( fun _ -> let n = Random.int 100 in ( fun x -> Hashtbl.seeded_hash n x ) )
 let feature_maps = List.init feature_amount ( fun i -> ( fun x -> List.nth x i ) )
@@ -91,7 +92,10 @@ let () =
 
   let _ = List.iter hg#insert test in
 
-  let _ = Array.fold_left ( fun a v -> a ^ "- " ^ ( List.fold_left ( fun b u -> b ^ ( string_of_int u ) ^ " " ) "" v ) ^ "\n" ) "\n" hg#archive
-    |> print_endline in
+  let _ = List.for_all hg#search test |> Printf.printf "%b\n" in
+
+  (* let _, s = Array.fold_left ( fun ( i, a ) v -> ( i + 1 , a ^ ( string_of_int i ) ^ ". " ^ ( List.fold_left ( fun b u -> b ^ ( string_of_int u ) ^ " " ) "" v ) ^ "\n" ) ) ( 0, "\n" ) hg#archive in
+
+  let _ = print_endline s in *)
 
   ()

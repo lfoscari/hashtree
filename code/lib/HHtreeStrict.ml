@@ -36,16 +36,6 @@ class ['a, 'b] hashTree
 
     method feature_maps = feature_maps
 
-    (* Da ripulire *)
-    method featured_gini bucket hash_map feature_map =
-        let featured = List.map ( fun v -> feature_map v |> hash_map ) bucket in
-        let len = List.length bucket |> float_of_int in (* = max_bucket_size *)
-        let unique = List.sort_uniq compare featured in
-        let len_unique = List.length unique |> float_of_int in
-        if len_unique = 1. then 0. else
-            ( 1. -. ( List.fold_left ( fun sum unq -> sum +. ( ( count unq featured |> float_of_int ) /. len ) ** 2. ) 0. unique ) ) *.
-                ( len_unique /. ( len_unique -. 1. ) )
-
     (* Ottimizzazione: utilizzo già i valori di f(x) calcolati per trovare la feature migliore *)
     method private pick_feature bucket hash_map =
         let ( max_i, max_v ), _ = List.map ( self#featured_gini bucket hash_map ) feature_maps |> max_index in
@@ -57,63 +47,64 @@ class ['a, 'b] hashTree
                 Leaf ( bucket, size * 2 )
             else
                 let hash_map = random_from hash_family in
-                let feature_index, feature_map, gini =  self#pick_feature bucket hash_map in
-                if gini < min_gini then
+                match self#pick_feature bucket hash_map with
+                | _, _, gini when gini < min_gini ->
                     aux ( iteration + 1 )
-                else
+                | feature_index, feature_map, _ ->
                     Node ( Array.make table_size ( Leaf ( [], initial_bucket_size ) ), feature_index, feature_map, hash_map )
         in aux 0
 
-    (* method insert el =
-        let rec aux dest el =
-            match dest with
-            | Leaf ( bucket, max ) when List.length bucket < max -> Leaf ( el :: bucket, max )
-            | Leaf ( bucket, max ) ->
-                ( match self#create_node ( el :: bucket ) max with
-                | Leaf _ as l -> l
-                | Node _ as n -> List.fold_left aux n ( el :: bucket ) )
-            | Node ( children, index, feat, hash ) ->
-                let dest_i = feat el |> hash in
-                let _ = children.(dest_i) <- aux children.(dest_i) el in
-                Node ( children, index, feat, hash )
-        in root <- aux root el *)
-
     method insert el =
-        let rec aux count dest el =
+        let count = ref 0 in
+        let rec aux dest el =
+            let _ = count := !count + 1 in
             match dest with
-            | Leaf ( bucket, max ) when List.length bucket < max -> Leaf ( el :: bucket, max ), count + 1
+            | Leaf ( bucket, max ) when List.length bucket <= max ->
+                Leaf ( el :: bucket, max )
             | Leaf ( bucket, max ) ->
                 ( match self#create_node ( el :: bucket ) max with
-                | Leaf _ as l -> l, count + 1
-                | Node _ as n ->
-                    List.fold_left ( fun ( old_node, old_count ) value -> aux old_count old_node value ) ( n, count + 1 ) ( el :: bucket ) )
-            | Node ( children, index, feat, hash ) ->
-                let dest_i = feat el |> hash in
-                let new_node, new_count = aux count children.(dest_i) el in
-                let _ = children.(dest_i) <- new_node in
-                Node ( children, index, feat, hash ), new_count + 1 in
-        let new_root, total_count = aux 0 root el in
-        let _ = root <- new_root in
-        let _ = insertion_costs <- total_count :: insertion_costs in
+                | Leaf _ as leaf -> leaf
+                | Node _ as node -> List.fold_left aux node ( el :: bucket ) )
+            | Node ( children, index, feature, hash ) ->
+                let dest = feature el |> hash in
+                let _ = children.(dest) <- aux children.(dest) el in
+                Node ( children, index, feature, hash ) in
+        let _ = root <- aux root el in
+        let _ = insertion_costs <- !count :: insertion_costs in
         ()
 
-    method visit ( node: ( 'a, 'b ) tree ) =
+    (* DA QUI IN POI LE STRUTTURE DATI AD ALBERO SONO IDENTICHE *)
+
+    (* Da ripulire *)
+    method featured_gini bucket hash_map feature_map =
+        let featured = List.map ( fun v -> feature_map v |> hash_map ) bucket in
+        let len = List.length bucket |> float_of_int in (* = max_bucket_size *)
+        let unique = List.sort_uniq compare featured in
+        let len_unique = List.length unique |> float_of_int in
+        if len_unique = 1. then 0. else
+            ( 1. -. ( List.fold_left ( fun sum unq -> sum +. ( ( count unq featured |> float_of_int ) /. len ) ** 2. ) 0. unique ) ) *.
+                ( len_unique /. ( len_unique -. 1. ) )
+
+    (* method visit ( node: ( 'a, 'b ) tree ) =
         match node with
         | Leaf ( bucket, _ ) -> bucket
-        | Node ( children, _, _, _ ) -> Array.fold_left ( fun res child -> ( self#visit child ) @ res ) [] children
+        | Node ( children, _, _, _ ) -> Array.fold_left ( fun res child -> ( self#visit child ) @ res ) [] children *)
 
     (* TODO: ricerca su più feature_index e feature_value *)
     method search feature_index feature_value =
-        let rec aux = function
+        let count = ref 0 in
+        let rec aux node =
+            let _ = count := !count + 1 in
+            match node with
             | Leaf ( bucket, _ ) -> bucket
             | Node ( children, index, _, hash ) when index = feature_index ->
                 hash feature_value |> Array.get children |> aux
             | Node ( children, _, _, _ ) ->
                 Array.fold_left ( fun res node -> ( aux node ) @ res ) [] children
-        in aux root
+        in aux root |> ignore; !count
 
     (* Like search, but counts the number of accesses *)
-    method counting_search feature_index feature_value =
+    (* method counting_search feature_index feature_value =
         let rec aux count node =
             let new_count = count + 1 in
             match node with
@@ -122,23 +113,29 @@ class ['a, 'b] hashTree
                 hash feature_value |> Array.get children |> aux new_count
             | Node ( children, _, _, _ ) ->
                 Array.fold_left aux new_count children
-        in aux 0 root
+        in aux 0 root *)
 
-    method depth ( node: ( 'a, 'b ) tree ) =
-        match node with
-        | Leaf _ -> 1
-        | Node ( children, _, _, _ ) -> 1 + Array.fold_left ( fun max child ->
-            let d = self#depth child in
-            if d > max then d else max
-        ) 0 children
+    method depth =
+        let rec aux = function
+            | Leaf _ -> 1
+            | Node ( children, _, _, _ ) -> 1 + Array.fold_left ( fun max child ->
+                    match aux child with
+                    | d when d > max -> d
+                    | _ -> max
+                ) 0 children
+        in aux root
 
-    method usage ( node: ( 'a, 'b ) tree ) =
-        match node with
-        | Leaf ( bucket, max ) ->
-            let t = ( List.length bucket |> float_of_int ) /. ( float_of_int max ) in
-            if t > 1.0 then Printf.printf "WTF: %f from %d and %d\n" t max ( List.length bucket ) else ();
-            t
-        | Node ( children, _, _, _ ) ->
-            ( Array.fold_left ( fun mean child -> mean +. self#usage child ) 0. children ) /. ( Array.length children |> float_of_int )
+    method usage =
+        let rec aux = function
+            | Leaf ( bucket, max ) -> ( List.length bucket |> float_of_int ) /. ( float_of_int max )
+            | Node ( children, _, _, _ ) ->
+                ( Array.fold_left ( fun mean child -> mean +. aux child ) 0. children ) /. ( Array.length children |> float_of_int )
+        in aux root
+
+    method size =
+        let rec aux = function
+            | Leaf ( bucket, _ ) -> 1 + List.length bucket (* Need to consider the slot in the father's table *)
+            | Node ( children, _, _, _ ) -> Array.fold_left ( fun sum node -> sum + aux node ) 0 children
+        in aux root
 
 end

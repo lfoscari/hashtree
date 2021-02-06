@@ -107,7 +107,7 @@ let random_search tree csv =
 
 	let element = List.length csv |> Random.int |> List.nth csv in
 
-	feature_map element |> tree#counting_search feature_index
+	feature_map element |> tree#search feature_index
 
 
 (**************************************************
@@ -121,8 +121,8 @@ let save_to_csv header filename test_results =
 
 let get_metrics trees csvs =
 
-	let depth_ls = List.map ( fun tree -> tree#depth tree#root |> float ) trees in
-	let usage_ls = List.map ( fun tree -> tree#usage tree#root ) trees in
+	let depth_ls = List.map ( fun tree -> tree#depth |> float ) trees in
+	let usage_ls = List.map ( fun tree -> tree#usage ) trees in
 	let access_ls = List.mapi ( fun index tree ->
 		List.init random_searches_amount ( fun _ -> List.nth csvs index |> random_search tree )
 		|> mean_of_ints random_searches_amount
@@ -177,30 +177,18 @@ let run_permutations_test source_file dest_adaptive dest_strict dest_linear dest
 		List.map ( fun ( m, b ) -> assemble_data m b testset_gen features_amount ) test_parameters
 		|> List.split in
 
-	let adaptive_test_data, strict_test_data = List.split trees_data in
-	let linear_test_data, hashgroup_test_data = List.split naive_data in
+	let adaptive_test_data, strict_test_data 		= List.split trees_data in
+	let linear_test_data, 	hashgroup_test_data = List.split naive_data in
 
 	let trees_header = [ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage"; "avg_access"; "avg_insertion" ] in
 	let naive_header = [ "avg_insertion" ] in
 
-	let _ = save_to_csv trees_header dest_adaptive adaptive_test_data in
-	let _ = save_to_csv trees_header dest_strict strict_test_data in
+	let _ = save_to_csv trees_header dest_adaptive 	adaptive_test_data in
+	let _ = save_to_csv trees_header dest_strict 		strict_test_data in
 	let _ = save_to_csv naive_header dest_hashgroup hashgroup_test_data in
-	let _ = save_to_csv naive_header dest_linear linear_test_data in
+	let _ = save_to_csv naive_header dest_linear 		linear_test_data in
 
 	()
-
-(* let run_log_test source_file _ map =
-
-	let testset_gen, features_amount = load_csv source_file map in
-
-	let m = float testset_rows_amount |> log |> int_of_float in
-	let b = float testset_rows_amount |> log |> int_of_float in
-
-	let _ = [ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage"; "avg_access" ] |> List.iter print_endline in
-	let _ = test_mb m b testset_gen features_amount |> List.iter print_endline in
-
-	() *)
 
 
 (**************************************************
