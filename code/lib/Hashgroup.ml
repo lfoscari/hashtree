@@ -26,7 +26,7 @@ class ['a, 'b] hashgroup
   val mutable insertion_costs = []
   method insertion_costs = insertion_costs
 
-  method size = Array.length archive |> float_of_int
+  method size = Array.length archive
 
   val mutable search_costs = []
   method search_costs = search_costs
@@ -76,14 +76,15 @@ class ['a, 'b] hashgroup
     let _ = count := !count + 1 in
     let feature_value = feature element in
     let rec aux index =
+      count := !count + 1;
       match archive.(index) with
       | t when t = [] || feature t = feature_value && t = element ->
         search_costs <- !count :: search_costs
       | _ -> aux ( ( index + 1 ) mod size )
     in aux ( ( hash feature_value ) mod size )
 
-    method feature_maps = feature_maps
-    method hash_family = hash_family
-    method table_size = size
+  method feature_maps = feature_maps
+  method hash_family = hash_family
+  method table_size = size
 
 end

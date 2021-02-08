@@ -1,32 +1,34 @@
 (**************************************************
  Utilities *)
 
-let random_from ls = List.length ls |> Random.int |> List.nth ls
-let count a = List.fold_left ( fun acc v -> if v = a then acc + 1 else acc ) 0
-let max_index ls = List.fold_left ( fun ( ( i, max ), cur ) v ->
-        if compare v max = 1 then ( ( cur, v ), cur + 1 ) else ( ( i, max ), cur + 1 )
-    ) ( ( 0, List.nth ls 0 ), 0 ) ls (* -> ( max value position, max value ), list length *)
+ let random_from ls = List.length ls |> Random.int |> List.nth ls
+ let count ls v = List.fold_left ( fun acc t -> if t = v then acc + 1 else acc ) 0 ls |> float_of_int
+ let max_index ls =
+    let ( i, m ), _ = List.fold_left ( fun ( ( i, max ), cur ) -> function
+        | v when v > max -> ( cur, v ), cur + 1
+        | _ -> ( i, max ), cur + 1
+    ) ( ( 0, List.nth ls 0 ), 0 ) ls in i, m
 
 
-(**************************************************
- Type *)
+ (**************************************************
+  Type *)
 
-type ( 'a, 'b ) tree =
+ type ( 'a, 'b ) tree =
     | Leaf of 'a list * int
     | Node of ( 'a, 'b ) tree array * int * ( 'a -> 'b ) * ( 'b -> int )
 
 
-(**************************************************
- HH-tree adaptive *)
+ (**************************************************
+  HH-tree adaptive *)
 
-class ['a, 'b] hashTree
+ class ['a, 'b] hashTree
     ( initial_bucket_size: int )
     ( feature_maps: ( 'a -> 'b ) list )
     ( hash_family: ( 'b -> int ) list )
     ( table_size: int )
     ( min_gini: float )
     ( attempts: int )
-= object (self)
+ = object (self)
 
     val mutable root: ( 'a, 'b ) tree = Leaf ( [], initial_bucket_size )
     method root = root
@@ -37,23 +39,30 @@ class ['a, 'b] hashTree
     val mutable search_costs = []
     method search_costs = search_costs
 
-    (* Ottimizzazione: utilizzo già i valori di f(x) calcolati per trovare la feature migliore *)
-    method private pick_feature bucket hash_map =
-        let ( max_i, max_v ), _ = List.map ( self#featured_gini bucket hash_map ) feature_maps |> max_index in
-        max_i, List.nth feature_maps max_i, max_v
-
     method private create_node bucket size =
         let rec aux iteration =
             if iteration >= attempts then
-                Leaf ( bucket, size + 1 )
+                Leaf ( bucket, size * 2 )
             else
-                let hash_map = random_from hash_family in
-                match self#pick_feature bucket hash_map with
-                | _, _, gini when gini < min_gini ->
-                    aux ( iteration + 1 )
-                | feature_index, feature_map, _ ->
+                match self#pick_best_feature bucket with
+                | _, _, _, gini when gini <= min_gini -> aux ( iteration + 1 )
+                | feature_index, feature_map, hash_map, _ ->
                     Node ( Array.make table_size ( Leaf ( [], initial_bucket_size ) ), feature_index, feature_map, hash_map )
         in aux 0
+
+    method private pick_best_feature bucket =
+        let hash_map = random_from hash_family in
+        let index_max, gini = List.map ( self#featured_gini bucket hash_map ) feature_maps |> max_index in
+        index_max, List.nth feature_maps index_max, hash_map, gini
+
+    method featured_gini bucket hash_map feature_map =
+        let featured = List.map ( fun v -> feature_map v |> hash_map ) bucket in
+        let len = List.length bucket |> float_of_int in
+        let unique = List.sort_uniq compare featured in
+        let len_unique = List.length unique |> float_of_int in
+        let normalize = len_unique /. ( len_unique -. 1. ) in
+        if len_unique = 1. then 0. else
+        ( 1. -. ( List.fold_left ( fun sum v -> sum +. ( count featured v /. len ) ** 2. ) 0. unique ) ) *. normalize
 
     method insert el =
         let count = ref 0 in
@@ -70,21 +79,8 @@ class ['a, 'b] hashTree
                 let dest = feature el |> hash in
                 let _ = children.(dest) <- aux children.(dest) el in
                 Node ( children, index, feature, hash ) in
-        let _ = root <- aux root el in
-        let _ = insertion_costs <- !count :: insertion_costs in
-        ()
-
-    (* DA QUI IN POI LE STRUTTURE DATI AD ALBERO SONO IDENTICHE *)
-
-    (* Da ripulire *)
-    method featured_gini bucket hash_map feature_map =
-        let featured = List.map ( fun v -> feature_map v |> hash_map ) bucket in
-        let len = List.length bucket |> float_of_int in (* = max_bucket_size *)
-        let unique = List.sort_uniq compare featured in
-        let len_unique = List.length unique |> float_of_int in
-        if len_unique = 1. then 0. else
-            ( 1. -. ( List.fold_left ( fun sum unq -> sum +. ( ( count unq featured |> float_of_int ) /. len ) ** 2. ) 0. unique ) ) *.
-                ( len_unique /. ( len_unique -. 1. ) )
+        root <- aux root el;
+        insertion_costs <- !count :: insertion_costs
 
     (* TODO: ricerca su più feature_index e feature_value *)
     method search feature_index feature_value =
@@ -118,11 +114,11 @@ class ['a, 'b] hashTree
 
     method size =
         let rec aux = function
-            | Leaf ( bucket, _ ) -> 1 + List.length bucket (* Need to consider the slot in the father's table *)
-            | Node ( children, _, _, _ ) -> Array.fold_left ( fun sum node -> sum + aux node ) 0 children
-        in aux root |> float_of_int
+            | Leaf ( bucket, _ ) -> List.length bucket
+            | Node ( children, _, _, _ ) -> Array.fold_left ( fun sum node -> sum + 1 + aux node ) 0 children
+        in aux root
 
     method feature_maps = feature_maps
     method hash_family = hash_family
     method table_size = table_size
-end
+ end

@@ -1,8 +1,5 @@
 open Lib
 
-(* Is this file the adaptive and strict
- * hh-tree structure will be tested *)
-
 (* Print stack trace *)
 let _ = Printexc.record_backtrace true
 
@@ -51,7 +48,7 @@ let testset_rows_amount = 50 (* n *)
 let permutations_amount = 10
 let random_searches_amount = 50
 
-(* strict only *)
+(* tree only *)
 let min_gini, attempts = 0.4, 10
 
 (* Avoid the obvious values b = m = 1 and b = m = n *)
@@ -118,13 +115,12 @@ let common_metrics dss =
 	let access_ls = List.map ( fun ds -> mean_of_ints testset_rows_amount ds#search_costs ) dss in
 
 	let avg_insertion = mean_of_floats permutations_amount insertion_ls in
-	let avg_size = mean_of_floats permutations_amount size_ls in
+	let avg_size = mean_of_ints permutations_amount size_ls in
 	let avg_access = mean_of_floats permutations_amount access_ls in
 
-	[
-		string_of_float avg_insertion;
+	[ string_of_float avg_insertion;
 		string_of_float avg_size;
-		string_of_float avg_access
+		string_of_float avg_access;
 	]
 
 let tree_metrics trees =
@@ -138,31 +134,23 @@ let tree_metrics trees =
 	let std_depth = std_of_floats permutations_amount avg_depth depth_ls in
 	let std_usage = std_of_floats permutations_amount avg_usage usage_ls in
 
-	[
-		string_of_float avg_depth; string_of_float avg_usage;
+	[ string_of_float avg_depth; string_of_float avg_usage;
 		string_of_float std_depth; string_of_float std_usage;
 	] @ common_metrics trees
 
 
 let assemble_data testset_gen features_amount ( bucket_size, table_size ) =
 
-	let parameters = [ string_of_int bucket_size; string_of_int table_size ] in
+	let m, b = string_of_int bucket_size, string_of_int table_size in
 	let csvs = Stream.npeek permutations_amount testset_gen in
 	let feature_maps, hash_maps = build_arguments table_size features_amount in
 
 	let trees = List.map ( fun test_set ->
 		let tree = new HHtree.hashTree bucket_size feature_maps hash_maps table_size min_gini attempts in
 		let _ = List.iter tree#insert test_set in
-		let _ = random_search tree test_set in tree (* TODO: repeat *)
+		for _ = 0 to random_searches_amount do random_search tree test_set done; tree
 	) csvs in
 	let trees_results = tree_metrics trees in
-
-	let linears = List.map ( fun test_set ->
-		let ln = new Linear.linear feature_maps in
-		let _ = List.iter ln#insert test_set in
-		let _ = random_search ln test_set in ln (* TODO: repeat *)
-	) csvs in
-	let linear_results = common_metrics linears in (* the cost of insertion is 1 *)
 
 	let hashgroups = List.map ( fun test_set ->
 		let hg = new Hashgroup.hashgroup feature_maps hash_maps table_size in
@@ -171,22 +159,30 @@ let assemble_data testset_gen features_amount ( bucket_size, table_size ) =
 	) csvs in
 	let hashgroup_results = common_metrics hashgroups in
 
-	parameters @ trees_results, linear_results, hashgroup_results
+	let linears = List.map ( fun test_set ->
+		let ln = new Linear.linear feature_maps in
+		let _ = List.iter ln#insert test_set in
+		for _ = 0 to random_searches_amount do random_search ln test_set done; ln
+	) csvs in
+	let linear_results = common_metrics linears in
+
+	[m; b] @ trees_results, [m] @ hashgroup_results, linear_results
 
 let run_permutations_test source_file dest_tree dest_linear dest_hashgroup map =
 
 	let testset_gen, features_amount = load_csv source_file map in
 
 	let build_structures = assemble_data testset_gen features_amount in
-	let trees_test_data, linear_test_data, hashgroup_test_data = List.map build_structures test_parameters |> split3 in
+	let trees_test_data, hashgroup_test_data, linear_test_data = List.map build_structures test_parameters |> split3 in
 
-	let common_header = [ "avg_insertion"; "avg_size"; "avg_access" ] in
-	let trees_header = [ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage" ] @ common_header in
-	let naive_header = [] @ common_header in
+	let common_header 	 = [ "avg_insertion"; "avg_size"; "avg_access" ] in
+	let hashgroup_header = [ "b" ] @ common_header in
+	let linear_header 	 = [] @ common_header in
+	let trees_header 		 = [ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage" ] @ common_header in
 
 	let _ = save_to_csv trees_header dest_tree trees_test_data in
-	let _ = save_to_csv naive_header dest_hashgroup hashgroup_test_data in
-	let _ = save_to_csv naive_header dest_linear linear_test_data in
+	let _ = save_to_csv hashgroup_header dest_hashgroup hashgroup_test_data in
+	let _ = save_to_csv linear_header dest_linear linear_test_data in
 
 	()
 
@@ -198,6 +194,7 @@ let () =
 
 	let _ = print_endline "Running tests..." in
 
+	(* Numeric *)
 	let _ = run_permutations_test
 		"../data/source/magic04.data"
 		"../data/tree/magic04.out"
@@ -205,6 +202,7 @@ let () =
 		"../data/hashgroup/magic04.out"
 		( fun x -> x ) in
 
+	(* Numeric *)
 	let _ = run_permutations_test
 		"../data/source/cloud.data"
 		"../data/tree/cloud.out"
@@ -212,6 +210,7 @@ let () =
 		"../data/hashgroup/cloud.out"
 		( fun x -> List.map float_of_string x ) in
 
+	(* Categorical *)
 	let _ = run_permutations_test
 		"../data/source/shelterdogs.data"
 		"../data/tree/shelterdogs.out"
@@ -220,10 +219,5 @@ let () =
 		( fun x -> x ) in
 
 	let _ = print_endline "Done." in
-
-	(* let _ = run_log_test
-		"../data/source/cloud.data"
-		"../data/strict/cloud.out"
-		( fun x -> List.map float_of_string x ) in *)
 
 	()
