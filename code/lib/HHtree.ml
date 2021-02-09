@@ -95,6 +95,18 @@
                 Array.fold_left ( fun res node -> ( aux node ) @ res ) [] children
         in aux root |> ignore; search_costs <- !count :: search_costs
 
+    method multi_feature_search features =
+        let count = ref 0 in
+        let rec aux node =
+            let _ = count := !count + 1 in
+            match node with
+            | Leaf ( bucket, _ ) -> bucket
+            | Node ( children, index, _, hash ) when List.mem_assoc index features ->
+                List.assoc index features |> hash |> Array.get children |> aux
+            | Node ( children, _, _, _ ) ->
+                Array.fold_left ( fun res node -> ( aux node ) @ res ) [] children
+        in aux root |> ignore; search_costs <- !count :: search_costs
+
     method depth =
         let rec aux = function
             | Leaf _ -> 1

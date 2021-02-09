@@ -40,6 +40,19 @@ let rec split3 ?( acc = ( [], [], [] ) ) ls =
 	| ( d, e, f ) :: xs -> split3 ~acc:( a @ [d], b @ [e], c @ [f] ) xs
 	| [] -> acc
 
+let random_from ls = List.length ls |> Random.int |> List.nth ls
+
+let shuffle ls =
+	let rb = List.map ( fun c -> ( Random.bits (), c ) ) ls in
+	let sorted = List.sort compare rb in
+	List.map snd sorted
+
+let random_subset n ls = shuffle ls |> BatList.take n
+
+let save_to_csv header filename test_results =
+	let _ = print_string "Test results saved in "; print_endline filename in
+	header :: test_results |> Csv.save filename
+
 
 (**************************************************
  Testing parameters *)
@@ -94,19 +107,11 @@ let random_search ds csv =
 
 	let feature_map = List.nth ds#feature_maps feature_index in
 
-	let element = List.length csv |> Random.int |> List.nth csv in
-
-	feature_map element |> ds#search feature_index
+	random_from csv |> feature_map |> ds#search feature_index
 
 
 (**************************************************
- Run tests *)
-
-let save_to_csv header filename test_results =
-
-	let _ = print_string "Test results saved in "; print_endline filename in
-
-	header :: test_results |> Csv.save filename
+ Metrics *)
 
 let common_metrics dss =
 
@@ -139,6 +144,9 @@ let tree_metrics trees =
 	] @ common_metrics trees
 
 
+(**************************************************
+ Calculate metrics *)
+
 let assemble_data testset_gen features_amount ( bucket_size, table_size ) =
 
 	let m, b = string_of_int bucket_size, string_of_int table_size in
@@ -168,6 +176,10 @@ let assemble_data testset_gen features_amount ( bucket_size, table_size ) =
 
 	[m; b] @ trees_results, [m] @ hashgroup_results, linear_results
 
+
+(**************************************************
+ Run tests *)
+
 let run_permutations_test source_file dest_tree dest_linear dest_hashgroup map =
 
 	let testset_gen, features_amount = load_csv source_file map in
@@ -185,6 +197,34 @@ let run_permutations_test source_file dest_tree dest_linear dest_hashgroup map =
 	let _ = save_to_csv linear_header dest_linear linear_test_data in
 
 	()
+
+let run_multifeature_search_test source_file destination =
+
+	let testset = Csv.load source_file |> BatList.take 500 in
+
+	let features_amount = List.nth testset 0 |> List.length in
+	let features_indexes = List.init features_amount ( fun i -> i ) in
+
+	let test_results = List.init ( features_amount - 1 ) ( fun search_features_amount ->
+			List.map ( fun ( m, b ) ->
+
+				let feature_maps, hash_maps = build_arguments b features_amount in
+				let tree = new HHtree.hashTree m feature_maps hash_maps b min_gini attempts in
+				let _ = List.map tree#insert testset in
+				for _ = 0 to random_searches_amount do
+					let element = random_from testset in
+					let indexes = random_subset ( search_features_amount + 1 ) features_indexes in
+					let values = List.map ( fun i -> element |> List.nth feature_maps i ) indexes in
+					List.combine indexes values |> tree#multi_feature_search
+				done;
+				[ string_of_int m; string_of_int b; string_of_int ( search_features_amount + 1 );
+					mean_of_ints random_searches_amount tree#search_costs |> string_of_float
+				]
+
+			) test_parameters
+		) in
+
+		save_to_csv [ "m"; "b"; "feature_amount"; "avg_access" ] destination ( List.flatten test_results )
 
 
 (**************************************************
@@ -217,6 +257,10 @@ let () =
 		"../data/linear/shelterdogs.out"
 		"../data/hashgroup/shelterdogs.out"
 		( fun x -> x ) in
+
+	let _ = run_multifeature_search_test
+		"../data/source/magic04.data"
+		"../data/tree/multifeature_search.out" in
 
 	let _ = print_endline "Done." in
 
