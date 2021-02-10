@@ -73,7 +73,6 @@ class ['a, 'b] hashgroup
 
   method search element =
     let count = ref 0 in (* numero di accessi *)
-    let _ = count := !count + 1 in
     let feature_value = feature element in
     let rec aux index =
       count := !count + 1;
