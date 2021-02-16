@@ -69,7 +69,7 @@ class ['a, 'b] hashTree
 		let rec aux dest el =
 			let _ = count := !count + 1 in
 			match dest with
-			| Leaf ( bucket, max ) when List.length bucket <= max ->
+			| Leaf ( bucket, max ) when List.length bucket < max ->
 				Leaf ( el :: bucket, max )
 			| Leaf ( bucket, max ) ->
 				( match self#create_node ( el :: bucket ) max with
@@ -115,7 +115,6 @@ class ['a, 'b] hashTree
 					| _ -> max
 				) 0 children
 		in aux root |> float_of_int
-
 
 	method usage =
 		let rec aux = function
