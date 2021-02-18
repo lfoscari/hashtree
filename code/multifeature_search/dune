@@ -1,0 +1,3 @@
+(executable
+   (name multifeature_search)
+   (libraries lib csv batteries))

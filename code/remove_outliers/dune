@@ -1,0 +1,3 @@
+(executable
+  (name remove_outliers)
+  (libraries lib csv batteries))
