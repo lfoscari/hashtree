@@ -43,9 +43,9 @@ let rec split3 ?( acc = ( [], [], [] ) ) ls =
 let random_from ls = List.length ls |> Random.int |> List.nth ls
 
 let shuffle ls =
-	let rb = List.map ( fun c -> ( Random.bits (), c ) ) ls in
-	let sorted = List.sort compare rb in
-	List.map snd sorted
+	List.map ( fun c -> ( Random.bits (), c ) ) ls
+    |> List.sort compare
+    |> List.map snd
 
 let random_subset n ls = shuffle ls |> BatList.take n
 
@@ -190,14 +190,14 @@ let run_permutations_test source_file dest_tree dest_linear dest_hashgroup map =
 	let common_header 	 = [ "avg_insertion"; "avg_size"; "avg_access" ] in
 	let hashgroup_header = [ "b" ] @ common_header in
 	let linear_header 	 = [] @ common_header in
-	let trees_header 		 = [ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage" ] @ common_header in
+	let trees_header 	 = [ "m"; "b"; "avg_depth"; "avg_usage"; "std_depth"; "std_usage" ] @ common_header in
 
 	let _ = save_to_csv trees_header dest_tree trees_test_data in
 	let _ = save_to_csv hashgroup_header dest_hashgroup hashgroup_test_data in
 	let _ = save_to_csv linear_header dest_linear linear_test_data in
 
 	()
-    
+
 
 (**************************************************
  Exec *)
@@ -206,7 +206,6 @@ let () =
 
 	let _ = print_endline "Running tests..." in
 
-    (*
 	(* Numeric *)
 	let _ = run_permutations_test
 		"../data/source/magic04.data"
@@ -230,8 +229,6 @@ let () =
 		"../data/linear/shelterdogs.out"
 		"../data/hashgroup/shelterdogs.out"
 		( fun x -> x ) in
-    *)
-
 
 	let _ = print_endline "Done." in
 

@@ -1,0 +1,4 @@
+(executable
+   (name deltas)
+   (libraries lib csv batteries))
+

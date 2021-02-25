@@ -22,10 +22,12 @@ let round d x =
 	( Float.floor ( ( x *. m ) +. 0.5 ) ) /. m
 
 let mean_of_ints len ls = ( List.fold_left (+) 0 ls |> float ) /. ( float len ) |> round 4
+let mean_of_floats len ls = ( List.fold_left (+.) 0. ls ) /. ( float len ) |> round 4
 
-let save_to_csv header filename test_results =
-	let _ = print_string "Results saved in "; print_endline filename in
-	header :: test_results |> Csv.save filename
+let percentile q ls = (* ls is sorted *)
+    let n = List.length ls |> float_of_int in
+    let i = if q = 100. then int_of_float n - 1 else q /. 100. *. n |> int_of_float in
+    List.nth ls i
 
 let random_from ls = List.length ls |> Random.int |> List.nth ls
 
@@ -74,6 +76,25 @@ let build_arguments table_size feature_amount =
 
 
 (**************************************************
+ Boxplot *)
+
+let print_boxplot_data _ data =
+    
+    let stats = List.map ( fun ls -> List.nth ls 2 |> float_of_string ) data |> List.sort compare in
+
+    let q1 = percentile 25. stats |> round 4 in
+    let q2 = percentile 50. stats |> round 4 in
+    let q3 = percentile 75. stats |> round 4 in
+
+    Printf.printf {|
+\addplot+[boxplot prepared={
+    lower whisker=%f, lower quartile=%f,
+    median=%f,
+    upper quartile=%f, upper whisker=%f
+}] coordinates {};
+|} q1 q1 q2 q3 q3
+
+(**************************************************
  Multifeature search *)
 
 let run_multifeature_search_test source_file destination_dir =
@@ -102,13 +123,18 @@ let run_multifeature_search_test source_file destination_dir =
 
             done;
 
-            [ string_of_int m; string_of_int b;
+            (* [ string_of_int m; string_of_int b;
               mean_of_ints random_searches_amount tree#search_costs |> string_of_float
-            ]
+            ] *)
+
+            [ mean_of_ints random_searches_amount tree#search_costs |> string_of_float ]
+
 
         ) test_parameters in
 
-        save_to_csv [ "m"; "b"; "avg_access" ] destination data;
+        (* let _ = print_boxplot_data search_features_amount data in *)
+
+        Csv.save destination ( ["data"] :: data ) (* [ "m"; "b"; "avg_access" ] destination data *)
 
     done
 
@@ -122,12 +148,12 @@ let () =
 		"../data/source/magic04.data"
 		"../data/tree/multifeature/magic04" in
 
-	let _ = run_multifeature_search_test
+	(* let _ = run_multifeature_search_test
 		"../data/source/cloud.data"
 		"../data/tree/multifeature/cloud" in
 
     let _ = run_multifeature_search_test
 		"../data/source/shelterdogs.data"
-		"../data/tree/multifeature/shelterdogs" in
+		"../data/tree/multifeature/shelterdogs" in *)
 
     ()
