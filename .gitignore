@@ -1,6 +1,10 @@
 .DS_Store
 *.swp
 
+## vscode
+
+.vscode
+
 ## Dune
 
 _opam
